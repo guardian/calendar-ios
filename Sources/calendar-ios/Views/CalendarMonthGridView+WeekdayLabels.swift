@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - Weekday labels
 
 extension CalendarMonthGridView {
-    
+
     var weekdayLabels: some View {
         LazyVGrid(columns: columns, spacing: CalendarLayout.spacing) {
             ForEach(Array(weekdaySymbols.enumerated()), id: \.offset) { _, symbol in
@@ -26,7 +26,7 @@ extension CalendarMonthGridView {
     /// Localized short weekday symbols reordered to match the calendar's first weekday.
     private var weekdaySymbols: [String] {
         let calendar: Calendar = .current
-        let symbols = calendar.veryShortWeekdaySymbols
+        let symbols = calendar.weekdaySymbols.map({ "\($0.prefix(2))" })
         let firstWeekday = calendar.firstWeekday - 1
         return Array(symbols[firstWeekday...] + symbols[..<firstWeekday])
     }
