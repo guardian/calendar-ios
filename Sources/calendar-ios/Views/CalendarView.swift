@@ -58,7 +58,7 @@ public struct CalendarView<Header: View, Cell: View>: View {
         range: ClosedRange<Date>? = nil,
         @ViewBuilder cell: @escaping (any CalendarDayRepresentable) -> Cell,
         @ViewBuilder header: @escaping () -> Header,
-        @ViewBuilder weekdayLabel: @escaping (String) -> WeekdayLabel
+        @ViewBuilder weekday: @escaping (String) -> WeekdayLabel
     ) {
         let calendar = Calendar.current
 
@@ -68,7 +68,7 @@ public struct CalendarView<Header: View, Cell: View>: View {
         )
         cellContent = cell
         headerContent = header
-        weekdayLabelContent = { symbol in AnyView(weekdayLabel(symbol)) }
+        weekdayLabelContent = { symbol in AnyView(weekday(symbol)) }
 
         let anchor = calendar.date(from: calendar.dateComponents([.year, .month], from: .now)) ?? .now
         months = Self.makeVisibleMonths(calendar: calendar, range: range, anchor: anchor)
@@ -248,6 +248,6 @@ public extension CalendarView where Header == CalendarHeaderView {
     ) {
         self.init(days: days, range: range, cell: cell, header: {
             CalendarHeaderView()
-        }, weekdayLabel: weekdayLabel)
+        }, weekday: weekdayLabel)
     }
 }

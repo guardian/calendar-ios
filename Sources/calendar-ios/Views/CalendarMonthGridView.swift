@@ -10,12 +10,12 @@ struct CalendarMonthGridView<Cell: View>: View {
     let weekdayLabelContent: ((String) -> AnyView)?
 
     let columns = Array(
-        repeating: GridItem(.flexible(), spacing: CalendarLayout.spacing),
+        repeating: GridItem(.flexible(), spacing: 0),
         count: 7
     )
 
     var body: some View {
-        LazyVGrid(columns: columns, spacing: CalendarLayout.spacing) {
+        LazyVGrid(columns: columns, spacing: 0) {
             ForEach(Array(days.enumerated()), id: \.offset) { _, date in
                 Group {
                     if let date {
@@ -42,7 +42,7 @@ struct CalendarMonthGridView<Cell: View>: View {
                 .aspectRatio(1.0, contentMode: .fill)
             }
         }
-        .safeAreaInset(edge: .top, spacing: CalendarLayout.spacing) {
+        .safeAreaInset(edge: .top, spacing: 0) {
             weekdayLabels
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)

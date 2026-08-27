@@ -10,14 +10,13 @@ private let previewDays: [PreviewCalendarDay] = [
 private let previewRange: ClosedRange<Date> =
 Date.now.monthAndYear.adding(months: -2)!...Date.now.monthAndYear.adding(months: 1)!
 
-#Preview("Custom Header + Weekday + Callbacks") {
+#Preview("Custom Header + Custom Weekday + Callbacks") {
     ScrollView {
         CalendarView(days: previewDays, range: previewRange) { day in
             PreviewDayCell(day: day)
         } header: {
             PreviewHeaderView()
-                .border(.purple)
-        } weekdayLabel: { symbol in
+        } weekday: { symbol in
             PreviewWeekdayLabel(symbol: symbol)
         }
         .onDateSelected { _, _ in
@@ -26,14 +25,19 @@ Date.now.monthAndYear.adding(months: -2)!...Date.now.monthAndYear.adding(months:
         .onMonthChange { _ in
             print("Month changed")
         }
-//        .border(.black)
+        .padding()
     }
 }
 
 #Preview("Default Header") {
     ScrollView {
         CalendarView(days: previewDays) { day in
-            PreviewDayCell(day: day)
+            Color.gray.opacity(0.1)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .overlay {
+                    Text(day.date.formatted(.dateTime.day()))
+                }
+                .padding(1)
         }
         .border(.black)
     }

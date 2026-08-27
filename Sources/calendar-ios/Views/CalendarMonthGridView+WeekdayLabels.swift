@@ -5,7 +5,7 @@ import SwiftUI
 extension CalendarMonthGridView {
 
     var weekdayLabels: some View {
-        LazyVGrid(columns: columns, spacing: CalendarLayout.spacing) {
+        LazyVGrid(columns: columns, spacing: 0) {
             ForEach(Array(weekdaySymbols.enumerated()), id: \.offset) { _, symbol in
                 Group {
                     if let weekdayLabelContent {
