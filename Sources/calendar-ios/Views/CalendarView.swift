@@ -4,7 +4,7 @@ import SwiftUI
 public struct CalendarView<Header: View, Cell: View>: View {
 
     /// The month currently scrolled into view (a start-of-month date).
-    @State private var scrolledMonth: Date?
+    @State var scrolledMonth: Date?
 
     /// The day the user has tapped, if any.
     @State private var selectedDate: Date? = Date()
@@ -28,7 +28,7 @@ public struct CalendarView<Header: View, Cell: View>: View {
     private var dateSelectHandler: ((Date, (any CalendarDayRepresentable)?) -> Void)?
 
     /// A stable, contiguous window of start-of-month dates the pager scrolls through.
-    private let months: [Date]
+    let months: [Date]
 
     public init(
         days: [any CalendarDayRepresentable] = [],
@@ -78,7 +78,7 @@ public struct CalendarView<Header: View, Cell: View>: View {
     }
 
     /// The month currently displayed (falls back to the center of the window).
-    private var displayedMonth: Date {
+    var displayedMonth: Date {
         scrolledMonth ?? months[middleMonthIndex]
     }
 
@@ -153,62 +153,6 @@ public struct CalendarView<Header: View, Cell: View>: View {
         .scrollClipDisabled()
     }
 
-    // MARK: - Actions
-
-    private func changeMonth(by value: Int) {
-        guard let index = months.firstIndex(of: displayedMonth),
-              months.indices.contains(index + value)
-        else { return }
-        withAnimation(.easeInOut(duration: 0.25)) {
-            scrolledMonth = months[index + value]
-        }
-    }
-
-    /// The first instant of the month containing `date`.
-    private func startOfMonth(for date: Date) -> Date {
-        date.monthAndYear
-    }
-
-    /// The half-open date interval [firstOfMonth, firstOfNextMonth) for a month.
-    private func monthInterval(for month: Date) -> DateInterval {
-        let start = startOfMonth(for: month)
-        let end = start.adding(months: 1) ?? start
-        return DateInterval(start: start, end: end)
-    }
-
-    // MARK: - Month window
-
-    private static func makeVisibleMonths(calendar: Calendar, range: ClosedRange<Date>?, anchor: Date) -> [Date] {
-        guard let range else {
-            // Preserve existing behavior when no range is supplied.
-            return (-2...2).map {
-                calendar.date(byAdding: .month, value: $0, to: anchor) ?? anchor
-            }
-        }
-
-        let lowerMonth = range.lowerBound.monthAndYear
-        let upperMonth = range.upperBound.monthAndYear
-        guard lowerMonth <= upperMonth else {
-            return [anchor.monthAndYear]
-        }
-
-        let monthCount = calendar.dateComponents([.month], from: lowerMonth, to: upperMonth).month ?? 0
-        return (0...monthCount).compactMap {
-            calendar.date(byAdding: .month, value: $0, to: lowerMonth)
-        }
-    }
-
-    private static func initialMonth(for anchor: Date, in months: [Date]) -> Date {
-        let normalizedAnchor = anchor.monthAndYear
-        if months.contains(normalizedAnchor) {
-            return normalizedAnchor
-        }
-        if let first = months.first, normalizedAnchor < first {
-            return first
-        }
-        return months.last ?? normalizedAnchor
-    }
-
     // MARK: - Modifiers
 
     /// Registers a handler that fires whenever the displayed month changes
@@ -226,28 +170,5 @@ public struct CalendarView<Header: View, Cell: View>: View {
         var copy = self
         copy.dateSelectHandler = handler
         return copy
-    }
-}
-
-public extension CalendarView where Header == CalendarHeaderView {
-    init(
-        days: [any CalendarDayRepresentable] = [],
-        range: ClosedRange<Date>? = nil,
-        @ViewBuilder cell: @escaping (any CalendarDayRepresentable) -> Cell
-    ) {
-        self.init(days: days, range: range, cell: cell) {
-            CalendarHeaderView()
-        }
-    }
-
-    init<WeekdayLabel: View>(
-        days: [any CalendarDayRepresentable] = [],
-        range: ClosedRange<Date>? = nil,
-        @ViewBuilder cell: @escaping (any CalendarDayRepresentable) -> Cell,
-        @ViewBuilder weekdayLabel: @escaping (String) -> WeekdayLabel
-    ) {
-        self.init(days: days, range: range, cell: cell, header: {
-            CalendarHeaderView()
-        }, weekday: weekdayLabel)
     }
 }

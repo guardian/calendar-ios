@@ -3,10 +3,20 @@ import SwiftUI
 /// The grid of day cells for a single month.
 @MainActor
 struct CalendarMonthGridView<Cell: View>: View {
+
+    // Month shown in this grid.
     let month: Date
+
+    // Current selected date
     @Binding var selectedDate: Date?
+
+    // Any custom data model mapped to this month's days.
     let daysByDate: [Date: any CalendarDayRepresentable]
+
+    // View for each of the day cells in the grid.
     let cellContent: (any CalendarDayRepresentable) -> Cell
+
+    // Optional view provided for each of the weekday labels above the grid.
     let weekdayLabelContent: ((String) -> AnyView)?
 
     let columns = Array(
@@ -19,15 +29,8 @@ struct CalendarMonthGridView<Cell: View>: View {
             ForEach(Array(days.enumerated()), id: \.offset) { _, date in
                 Group {
                     if let date {
-                        // The calendar owns selection; the cell only renders.
                         Button {
-                            // Keep selection changes deterministic and avoid
-                            // unintended layout animations in the surrounding pager.
-                            var transaction = Transaction()
-                            transaction.disablesAnimations = true
-                            withTransaction(transaction) {
-                                selectedDate = date
-                            }
+                            selectedDate = date
                         } label: {
                             cellContent(representable(for: date))
                         }
@@ -35,7 +38,6 @@ struct CalendarMonthGridView<Cell: View>: View {
                     } else {
                         // Empty leading slot for days before the 1st.
                         Color.clear
-                            .frame(height: CalendarLayout.cellHeight)
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)

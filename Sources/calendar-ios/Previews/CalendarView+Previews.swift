@@ -10,6 +10,15 @@ private let previewDays: [PreviewCalendarDay] = [
 private let previewRange: ClosedRange<Date> =
 Date.now.monthAndYear.adding(months: -2)!...Date.now.monthAndYear.adding(months: 1)!
 
+#Preview("Basic") {
+    ScrollView {
+        CalendarView(days: previewDays) { day in
+            Text(day.date.formatted(.dateTime.day()))
+                .foregroundStyle(day.isSelected ? .blue : day.isToday ? .orange : .primary)
+        }
+    }
+}
+
 #Preview("Custom Header + Custom Weekday + Callbacks") {
     ScrollView {
         CalendarView(days: previewDays, range: previewRange) { day in
@@ -26,20 +35,6 @@ Date.now.monthAndYear.adding(months: -2)!...Date.now.monthAndYear.adding(months:
             print("Month changed")
         }
         .padding()
-    }
-}
-
-#Preview("Default Header") {
-    ScrollView {
-        CalendarView(days: previewDays) { day in
-            Color.gray.opacity(0.1)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .overlay {
-                    Text(day.date.formatted(.dateTime.day()))
-                }
-                .padding(1)
-        }
-        .border(.black)
     }
 }
 
@@ -84,7 +79,7 @@ private struct PreviewHeaderView: View {
             Button {
                 context.changeMonth(by: -1)
             } label: {
-                Image(systemName: "chevron.left")
+                Image(systemName: "hand.point.left")
             }
             .disabled(context.canGoToPreviousMonth == false)
 
@@ -92,13 +87,14 @@ private struct PreviewHeaderView: View {
 
             Text(context.month.formatted(.dateTime.month(.wide).year()))
                 .font(.headline)
+                .italic()
 
             Spacer()
 
             Button {
                 context.changeMonth(by: 1)
             } label: {
-                Image(systemName: "chevron.right")
+                Image(systemName: "hand.point.right")
             }
             .disabled(context.canGoToNextMonth == false)
         }
@@ -121,7 +117,7 @@ private struct PreviewDayCell: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .foregroundStyle(day.isSelected ? Color.white : previewDay?.color ?? Color.primary)
             .background {
-                RoundedRectangle(cornerRadius: 8)
+                Rectangle()
                     .fill(.black)
                     .opacity(day.isSelected ? 1 : 0)
             }
