@@ -1,0 +1,256 @@
+import SwiftUI
+
+@MainActor
+public struct CalendarView<Header: View, Cell: View>: View {
+
+    /// The month currently scrolled into view (a start-of-month date).
+    @State private var scrolledMonth: Date?
+
+    /// The day the user has tapped, if any.
+    @State private var selectedDate: Date? = Date()
+
+    /// Days keyed by the start of their date.
+    private let daysByDate: [Date: any CalendarRepresentable]
+
+    /// Builds the view for a given day.
+    private let cellContent: (any CalendarRepresentable) -> Cell
+
+    /// Builds the header view for the current month.
+    private let headerContent: () -> Header
+
+    /// Optionally builds the view for a weekday label symbol.
+    private let weekdayLabelContent: ((String) -> AnyView)?
+
+    /// Called whenever the visible month changes, with that month's date interval.
+    private var monthChangeHandler: ((DateInterval) -> Void)?
+
+    /// Called when a day is tapped, with the date and its mark (if any).
+    private var dateSelectHandler: ((Date, (any CalendarRepresentable)?) -> Void)?
+
+    /// Number of months available for paging on either side of the current month. (clipped to max 2 years)
+    private static var monthSpan: Int { 24 }
+
+    /// A stable, contiguous window of start-of-month dates the pager scrolls through.
+    private let months: [Date]
+
+    public init(
+        days: [any CalendarRepresentable] = [],
+        range: ClosedRange<Date>? = nil,
+        @ViewBuilder cell: @escaping (any CalendarRepresentable) -> Cell,
+        @ViewBuilder header: @escaping () -> Header
+    ) {
+        let calendar = Calendar.current
+
+        daysByDate = Dictionary(
+            days.map { (calendar.startOfDay(for: $0.date), $0) },
+            uniquingKeysWith: { first, _ in first }
+        )
+        cellContent = cell
+        headerContent = header
+        weekdayLabelContent = nil
+
+        let anchor = calendar.date(from: calendar.dateComponents([.year, .month], from: .now)) ?? .now
+        months = Self.makeVisibleMonths(calendar: calendar, range: range, anchor: anchor)
+
+        // Start centered on the current month or clamp to the nearest month in range.
+        _scrolledMonth = State(initialValue: Self.initialMonth(for: anchor, in: months))
+    }
+
+    public init<WeekdayLabel: View>(
+        days: [any CalendarRepresentable] = [],
+        range: ClosedRange<Date>? = nil,
+        @ViewBuilder cell: @escaping (any CalendarRepresentable) -> Cell,
+        @ViewBuilder header: @escaping () -> Header,
+        @ViewBuilder weekdayLabel: @escaping (String) -> WeekdayLabel
+    ) {
+        let calendar = Calendar.current
+
+        daysByDate = Dictionary(
+            days.map { (calendar.startOfDay(for: $0.date), $0) },
+            uniquingKeysWith: { first, _ in first }
+        )
+        cellContent = cell
+        headerContent = header
+        weekdayLabelContent = { symbol in AnyView(weekdayLabel(symbol)) }
+
+        let anchor = calendar.date(from: calendar.dateComponents([.year, .month], from: .now)) ?? .now
+        months = Self.makeVisibleMonths(calendar: calendar, range: range, anchor: anchor)
+
+        // Start centered on the current month or clamp to the nearest month in range.
+        _scrolledMonth = State(initialValue: Self.initialMonth(for: anchor, in: months))
+    }
+
+    /// The month currently displayed (falls back to the center of the window).
+    private var displayedMonth: Date {
+        scrolledMonth ?? months[middleMonthIndex]
+    }
+
+    private var middleMonthIndex: Int {
+        max(0, min(months.count - 1, months.count / 2))
+    }
+
+    /// The context exposed to any custom header view.
+    private var headerContext: any CalendarHeaderContextRepresentable {
+        CalendarHeaderContext(
+            month: displayedMonth,
+            canGoToPreviousMonth: displayedMonth != months.first,
+            canGoToNextMonth: displayedMonth != months.last,
+            changeMonth: { changeMonth(by: $0) }
+        )
+    }
+
+    public var body: some View {
+        VStack(spacing: 0) {
+            headerContent()
+                .environment(\.calendarHeaderContext, headerContext)
+            pager
+        }
+        .onAppear { notifyMonthChange() }
+        .onChange(of: scrolledMonth) { notifyMonthChange() }
+        .onChange(of: selectedDate) { notifyDateSelect() }
+    }
+
+    /// Invokes the registered handler with the displayed month's interval.
+    private func notifyMonthChange() {
+        monthChangeHandler?(monthInterval(for: displayedMonth))
+    }
+
+    /// Invokes the registered handler with the selected date and its mark.
+    private func notifyDateSelect() {
+        guard let date = selectedDate else { return }
+        dateSelectHandler?(date, daysByDate[date.beginningOfDay])
+    }
+
+    // MARK: - Paging grid
+
+    /// A horizontally paged, lazily loaded stack of month grids. Only the
+    /// visible month (and its immediate neighbors) are ever instantiated.
+    ///
+    private var pager: some View {
+        ScrollView(.horizontal) {
+            LazyHStack(alignment: .top, spacing: 0) {
+                ForEach(months, id: \.self) { month in
+                    CalendarMonthGridView(
+                        month: month,
+                        selectedDate: $selectedDate,
+                        daysByDate: daysByDate,
+                        cellContent: cellContent,
+                        weekdayLabelContent: weekdayLabelContent
+                    )
+                    .aspectRatio(1, contentMode: .fit)
+                    .containerRelativeFrame(.horizontal, alignment: .top)
+                    .clipped()
+                    .scrollTransition { effect, phase in
+                        effect
+                            .opacity(phase.isIdentity ? 1 : 0.15)
+                            .blur(radius: phase.isIdentity ? 0 : 2)
+                    }
+                    .id(month)
+                }
+            }
+            .scrollTargetLayout()
+        }
+        .scrollTargetBehavior(.viewAligned)
+        .scrollPosition(id: $scrolledMonth, anchor: .center)
+        .scrollIndicators(.hidden)
+        .scrollClipDisabled()
+    }
+
+    // MARK: - Actions
+
+    private func changeMonth(by value: Int) {
+        guard let index = months.firstIndex(of: displayedMonth),
+              months.indices.contains(index + value)
+        else { return }
+        withAnimation(.easeInOut(duration: 0.25)) {
+            scrolledMonth = months[index + value]
+        }
+    }
+
+    /// The first instant of the month containing `date`.
+    private func startOfMonth(for date: Date) -> Date {
+        date.monthAndYear
+    }
+
+    /// The half-open date interval [firstOfMonth, firstOfNextMonth) for a month.
+    private func monthInterval(for month: Date) -> DateInterval {
+        let start = startOfMonth(for: month)
+        let end = start.adding(months: 1) ?? start
+        return DateInterval(start: start, end: end)
+    }
+
+    // MARK: - Month window
+
+    private static func makeVisibleMonths(calendar: Calendar, range: ClosedRange<Date>?, anchor: Date) -> [Date] {
+        guard let range else {
+            // Preserve existing behavior when no range is supplied.
+            return (-Self.monthSpan...Self.monthSpan).map {
+                calendar.date(byAdding: .month, value: $0, to: anchor) ?? anchor
+            }
+        }
+
+        let lowerMonth = range.lowerBound.monthAndYear
+        let upperMonth = range.upperBound.monthAndYear
+        guard lowerMonth <= upperMonth else {
+            return [anchor.monthAndYear]
+        }
+
+        let monthCount = calendar.dateComponents([.month], from: lowerMonth, to: upperMonth).month ?? 0
+        return (0...monthCount).compactMap {
+            calendar.date(byAdding: .month, value: $0, to: lowerMonth)
+        }
+    }
+
+    private static func initialMonth(for anchor: Date, in months: [Date]) -> Date {
+        let normalizedAnchor = anchor.monthAndYear
+        if months.contains(normalizedAnchor) {
+            return normalizedAnchor
+        }
+        if let first = months.first, normalizedAnchor < first {
+            return first
+        }
+        return months.last ?? normalizedAnchor
+    }
+
+    // MARK: - Modifiers
+
+    /// Registers a handler that fires whenever the displayed month changes
+    /// (via swipe, the chevron buttons, or the initial appearance), passing
+    /// that month's date interval.
+    func onMonthChange(_ handler: @escaping (DateInterval) -> Void) -> Self {
+        var copy = self
+        copy.monthChangeHandler = handler
+        return copy
+    }
+
+    /// Registers a handler that fires when a day is tapped, passing the
+    /// selected date and its mark (if one exists on that day).
+    func onDateSelected(_ handler: @escaping (Date, (any CalendarRepresentable)?) -> Void) -> Self {
+        var copy = self
+        copy.dateSelectHandler = handler
+        return copy
+    }
+}
+
+public extension CalendarView where Header == CalendarHeaderView {
+    init(
+        days: [any CalendarRepresentable] = [],
+        range: ClosedRange<Date>? = nil,
+        @ViewBuilder cell: @escaping (any CalendarRepresentable) -> Cell
+    ) {
+        self.init(days: days, range: range, cell: cell) {
+            CalendarHeaderView()
+        }
+    }
+
+    init<WeekdayLabel: View>(
+        days: [any CalendarRepresentable] = [],
+        range: ClosedRange<Date>? = nil,
+        @ViewBuilder cell: @escaping (any CalendarRepresentable) -> Cell,
+        @ViewBuilder weekdayLabel: @escaping (String) -> WeekdayLabel
+    ) {
+        self.init(days: days, range: range, cell: cell, header: {
+            CalendarHeaderView()
+        }, weekdayLabel: weekdayLabel)
+    }
+}
