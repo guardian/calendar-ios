@@ -10,10 +10,10 @@ public struct CalendarView<Header: View, Cell: View>: View {
     @State private var selectedDate: Date? = Date()
 
     /// Days keyed by the start of their date.
-    private let daysByDate: [Date: any CalendarRepresentable]
+    private let daysByDate: [Date: any CalendarDayRepresentable]
 
     /// Builds the view for a given day.
-    private let cellContent: (any CalendarRepresentable) -> Cell
+    private let cellContent: (any CalendarDayRepresentable) -> Cell
 
     /// Builds the header view for the current month.
     private let headerContent: () -> Header
@@ -25,18 +25,15 @@ public struct CalendarView<Header: View, Cell: View>: View {
     private var monthChangeHandler: ((DateInterval) -> Void)?
 
     /// Called when a day is tapped, with the date and its mark (if any).
-    private var dateSelectHandler: ((Date, (any CalendarRepresentable)?) -> Void)?
-
-    /// Number of months available for paging on either side of the current month. (clipped to max 2 years)
-    private static var monthSpan: Int { 24 }
+    private var dateSelectHandler: ((Date, (any CalendarDayRepresentable)?) -> Void)?
 
     /// A stable, contiguous window of start-of-month dates the pager scrolls through.
     private let months: [Date]
 
     public init(
-        days: [any CalendarRepresentable] = [],
+        days: [any CalendarDayRepresentable] = [],
         range: ClosedRange<Date>? = nil,
-        @ViewBuilder cell: @escaping (any CalendarRepresentable) -> Cell,
+        @ViewBuilder cell: @escaping (any CalendarDayRepresentable) -> Cell,
         @ViewBuilder header: @escaping () -> Header
     ) {
         let calendar = Calendar.current
@@ -57,9 +54,9 @@ public struct CalendarView<Header: View, Cell: View>: View {
     }
 
     public init<WeekdayLabel: View>(
-        days: [any CalendarRepresentable] = [],
+        days: [any CalendarDayRepresentable] = [],
         range: ClosedRange<Date>? = nil,
-        @ViewBuilder cell: @escaping (any CalendarRepresentable) -> Cell,
+        @ViewBuilder cell: @escaping (any CalendarDayRepresentable) -> Cell,
         @ViewBuilder header: @escaping () -> Header,
         @ViewBuilder weekdayLabel: @escaping (String) -> WeekdayLabel
     ) {
@@ -128,7 +125,7 @@ public struct CalendarView<Header: View, Cell: View>: View {
     ///
     private var pager: some View {
         ScrollView(.horizontal) {
-            LazyHStack(alignment: .top, spacing: 0) {
+            LazyHStack(alignment: .top, spacing: 20) {
                 ForEach(months, id: \.self) { month in
                     CalendarMonthGridView(
                         month: month,
@@ -184,7 +181,7 @@ public struct CalendarView<Header: View, Cell: View>: View {
     private static func makeVisibleMonths(calendar: Calendar, range: ClosedRange<Date>?, anchor: Date) -> [Date] {
         guard let range else {
             // Preserve existing behavior when no range is supplied.
-            return (-Self.monthSpan...Self.monthSpan).map {
+            return (-2...2).map {
                 calendar.date(byAdding: .month, value: $0, to: anchor) ?? anchor
             }
         }
@@ -225,7 +222,7 @@ public struct CalendarView<Header: View, Cell: View>: View {
 
     /// Registers a handler that fires when a day is tapped, passing the
     /// selected date and its mark (if one exists on that day).
-    func onDateSelected(_ handler: @escaping (Date, (any CalendarRepresentable)?) -> Void) -> Self {
+    func onDateSelected(_ handler: @escaping (Date, (any CalendarDayRepresentable)?) -> Void) -> Self {
         var copy = self
         copy.dateSelectHandler = handler
         return copy
@@ -234,9 +231,9 @@ public struct CalendarView<Header: View, Cell: View>: View {
 
 public extension CalendarView where Header == CalendarHeaderView {
     init(
-        days: [any CalendarRepresentable] = [],
+        days: [any CalendarDayRepresentable] = [],
         range: ClosedRange<Date>? = nil,
-        @ViewBuilder cell: @escaping (any CalendarRepresentable) -> Cell
+        @ViewBuilder cell: @escaping (any CalendarDayRepresentable) -> Cell
     ) {
         self.init(days: days, range: range, cell: cell) {
             CalendarHeaderView()
@@ -244,9 +241,9 @@ public extension CalendarView where Header == CalendarHeaderView {
     }
 
     init<WeekdayLabel: View>(
-        days: [any CalendarRepresentable] = [],
+        days: [any CalendarDayRepresentable] = [],
         range: ClosedRange<Date>? = nil,
-        @ViewBuilder cell: @escaping (any CalendarRepresentable) -> Cell,
+        @ViewBuilder cell: @escaping (any CalendarDayRepresentable) -> Cell,
         @ViewBuilder weekdayLabel: @escaping (String) -> WeekdayLabel
     ) {
         self.init(days: days, range: range, cell: cell, header: {

@@ -5,8 +5,8 @@ import SwiftUI
 struct CalendarMonthGridView<Cell: View>: View {
     let month: Date
     @Binding var selectedDate: Date?
-    let daysByDate: [Date: any CalendarRepresentable]
-    let cellContent: (any CalendarRepresentable) -> Cell
+    let daysByDate: [Date: any CalendarDayRepresentable]
+    let cellContent: (any CalendarDayRepresentable) -> Cell
     let weekdayLabelContent: ((String) -> AnyView)?
 
     let columns = Array(
@@ -30,7 +30,6 @@ struct CalendarMonthGridView<Cell: View>: View {
                             }
                         } label: {
                             cellContent(representable(for: date))
-                                .padding(.top, -0.5)
                         }
                         .buttonStyle(.plain)
                     } else {
@@ -51,7 +50,7 @@ struct CalendarMonthGridView<Cell: View>: View {
 
     /// The caller-supplied day for a date (or a default), with the calendar's
     /// isToday/isSelected state applied.
-    private func representable(for date: Date) -> any CalendarRepresentable {
+    private func representable(for date: Date) -> any CalendarDayRepresentable {
         var day = daysByDate[date.beginningOfDay] ?? CalendarDay(date: date)
         day.isToday = date.isToday
         day.isSelected = selectedDate.map { $0.isSameDay(as: date) } ?? false

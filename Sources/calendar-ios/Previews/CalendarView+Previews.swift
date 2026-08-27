@@ -14,13 +14,11 @@ Date.now.monthAndYear.adding(months: -2)!...Date.now.monthAndYear.adding(months:
     ScrollView {
         CalendarView(days: previewDays, range: previewRange) { day in
             PreviewDayCell(day: day)
-                .border(.green)
         } header: {
             PreviewHeaderView()
                 .border(.purple)
         } weekdayLabel: { symbol in
             PreviewWeekdayLabel(symbol: symbol)
-                .border(.blue)
         }
         .onDateSelected { _, _ in
             print("Date selected")
@@ -105,7 +103,7 @@ private struct PreviewHeaderView: View {
 }
 
 private struct PreviewDayCell: View {
-    let day: any CalendarRepresentable
+    let day: any CalendarDayRepresentable
 
     var previewDay: PreviewCalendarDay? {
         return day as? PreviewCalendarDay
@@ -113,9 +111,9 @@ private struct PreviewDayCell: View {
     
     var body: some View {
         Text(day.date.formatted(.dateTime.day()))
-            .font(.body)
+            .font(day.isToday ? .body : .subheadline)
             .dynamicTypeSize(.large ... .accessibility1)
-            .fontWeight(day.isToday ? .bold : .regular)
+            .fontWeight(day.isToday ? .black : .regular)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .foregroundStyle(day.isSelected ? Color.white : previewDay?.color ?? Color.primary)
             .background {
@@ -125,8 +123,7 @@ private struct PreviewDayCell: View {
             }
             .overlay {
                 Rectangle()
-                    .stroke(.black)
-                    .opacity(day.isToday && (day.isSelected == false) ? 1 : 0.15)
+                    .stroke(.gray)
             }
             .contentShape(Rectangle())
             .accessibilityLabel(accessibilityLabel)
@@ -139,7 +136,7 @@ private struct PreviewDayCell: View {
     }
 }
 
-private struct PreviewCalendarDay: CalendarRepresentable {
+private struct PreviewCalendarDay: CalendarDayRepresentable {
     var id: Date { date }
     let date: Date
     var color: Color?

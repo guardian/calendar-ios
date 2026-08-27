@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Internal fallback day model used when callers do not provide a day for a date.
-struct CalendarDay: CalendarRepresentable {
+struct CalendarDay: CalendarDayRepresentable {
     var id: Date { date }
     let date: Date
     var color: Color?
