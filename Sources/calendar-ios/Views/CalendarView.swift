@@ -9,6 +9,9 @@ public struct CalendarView<Header: View, Cell: View>: View {
     /// The day the user has tapped, if any.
     @State private var selectedDate: Date? = Date()
 
+    /// Observable month state consumed by custom headers.
+    @State private var headerContext: CalendarHeaderContext
+
     /// Days keyed by the start of their date.
     private let daysByDate: [Date: any CalendarDayRepresentable]
 
@@ -16,7 +19,7 @@ public struct CalendarView<Header: View, Cell: View>: View {
     private let cellContent: (any CalendarDayRepresentable) -> Cell
 
     /// Builds the header view for the current month.
-    private let headerContent: () -> Header
+    private let headerContent: (CalendarHeaderContext) -> Header
 
     /// Optionally builds the view for a weekday label symbol.
     private let weekdayLabelContent: ((String) -> AnyView)?
@@ -34,7 +37,7 @@ public struct CalendarView<Header: View, Cell: View>: View {
         days: [any CalendarDayRepresentable] = [],
         range: ClosedRange<Date>? = nil,
         @ViewBuilder cell: @escaping (any CalendarDayRepresentable) -> Cell,
-        @ViewBuilder header: @escaping () -> Header
+        @ViewBuilder header: @escaping (CalendarHeaderContext) -> Header
     ) {
         let calendar = Calendar.current
 
@@ -50,14 +53,22 @@ public struct CalendarView<Header: View, Cell: View>: View {
         months = Self.makeVisibleMonths(calendar: calendar, range: range, anchor: anchor)
 
         // Start centered on the current month or clamp to the nearest month in range.
-        _scrolledMonth = State(initialValue: Self.initialMonth(for: anchor, in: months))
+        let initialMonth = Self.initialMonth(for: anchor, in: months)
+        _scrolledMonth = State(initialValue: initialMonth)
+        _headerContext = State(
+            initialValue: CalendarHeaderContext(
+                month: initialMonth,
+                canGoToPreviousMonth: initialMonth != months.first,
+                canGoToNextMonth: initialMonth != months.last
+            )
+        )
     }
 
     public init<WeekdayLabel: View>(
         days: [any CalendarDayRepresentable] = [],
         range: ClosedRange<Date>? = nil,
         @ViewBuilder cell: @escaping (any CalendarDayRepresentable) -> Cell,
-        @ViewBuilder header: @escaping () -> Header,
+        @ViewBuilder header: @escaping (CalendarHeaderContext) -> Header,
         @ViewBuilder weekday: @escaping (String) -> WeekdayLabel
     ) {
         let calendar = Calendar.current
@@ -74,7 +85,15 @@ public struct CalendarView<Header: View, Cell: View>: View {
         months = Self.makeVisibleMonths(calendar: calendar, range: range, anchor: anchor)
 
         // Start centered on the current month or clamp to the nearest month in range.
-        _scrolledMonth = State(initialValue: Self.initialMonth(for: anchor, in: months))
+        let initialMonth = Self.initialMonth(for: anchor, in: months)
+        _scrolledMonth = State(initialValue: initialMonth)
+        _headerContext = State(
+            initialValue: CalendarHeaderContext(
+                month: initialMonth,
+                canGoToPreviousMonth: initialMonth != months.first,
+                canGoToNextMonth: initialMonth != months.last
+            )
+        )
     }
 
     /// The month currently displayed (falls back to the center of the window).
@@ -86,25 +105,33 @@ public struct CalendarView<Header: View, Cell: View>: View {
         max(0, min(months.count - 1, months.count / 2))
     }
 
-    /// The context exposed to any custom header view.
-    private var headerContext: any CalendarHeaderContextRepresentable {
-        CalendarHeaderContext(
-            month: displayedMonth,
-            canGoToPreviousMonth: displayedMonth != months.first,
-            canGoToNextMonth: displayedMonth != months.last,
-            changeMonth: { changeMonth(by: $0) }
-        )
-    }
-
     public var body: some View {
         VStack(spacing: 0) {
-            headerContent()
-                .environment(\.calendarHeaderContext, headerContext)
+            headerContent(headerContext)
             pager
         }
-        .onAppear { notifyMonthChange() }
-        .onChange(of: scrolledMonth) { notifyMonthChange() }
+        .onAppear {
+            syncHeaderContext()
+            notifyMonthChange()
+        }
+        .onChange(of: scrolledMonth) {
+            syncHeaderContext()
+            notifyMonthChange()
+        }
+        .onChange(of: headerContext.requestedMonthOffset) {
+            guard let value = headerContext.requestedMonthOffset else { return }
+            headerContext.clearRequestedMonthOffset()
+            changeMonth(by: value)
+        }
         .onChange(of: selectedDate) { notifyDateSelect() }
+    }
+
+    private func syncHeaderContext() {
+        headerContext.apply(
+            month: displayedMonth,
+            canGoToPreviousMonth: displayedMonth != months.first,
+            canGoToNextMonth: displayedMonth != months.last
+        )
     }
 
     /// Invokes the registered handler with the displayed month's interval.

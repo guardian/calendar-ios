@@ -1,24 +1,38 @@
 import Foundation
+import Observation
 
-public struct CalendarHeaderContext: CalendarHeaderContextRepresentable {
-    public let month: Date
-    public let canGoToPreviousMonth: Bool
-    public let canGoToNextMonth: Bool
-    private let changeMonthHandler: (Int) -> Void
+@Observable
+public final class CalendarHeaderContext: CalendarHeaderContextRepresentable {
+    public private(set) var month: Date
+    public private(set) var canGoToPreviousMonth: Bool
+    public private(set) var canGoToNextMonth: Bool
+    var requestedMonthOffset: Int?
 
     public init(
         month: Date,
         canGoToPreviousMonth: Bool,
-        canGoToNextMonth: Bool,
-        changeMonth: @escaping (Int) -> Void
+        canGoToNextMonth: Bool
     ) {
         self.month = month
         self.canGoToPreviousMonth = canGoToPreviousMonth
         self.canGoToNextMonth = canGoToNextMonth
-        changeMonthHandler = changeMonth
     }
 
     public func changeMonth(by value: Int) {
-        changeMonthHandler(value)
+        requestedMonthOffset = value
+    }
+
+    func apply(
+        month: Date,
+        canGoToPreviousMonth: Bool,
+        canGoToNextMonth: Bool
+    ) {
+        self.month = month
+        self.canGoToPreviousMonth = canGoToPreviousMonth
+        self.canGoToNextMonth = canGoToNextMonth
+    }
+
+    func clearRequestedMonthOffset() {
+        requestedMonthOffset = nil
     }
 }

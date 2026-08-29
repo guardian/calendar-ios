@@ -1,7 +1,9 @@
 import Foundation
+import Observation
 import SwiftUI
 
-private struct EmptyCalendarHeaderContext: CalendarHeaderContextRepresentable {
+@Observable
+private final class EmptyCalendarHeaderContext: CalendarHeaderContextRepresentable {
     let month: Date = .distantPast
     let canGoToPreviousMonth: Bool = false
     let canGoToNextMonth: Bool = false

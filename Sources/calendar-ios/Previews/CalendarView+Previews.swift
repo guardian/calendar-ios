@@ -23,8 +23,8 @@ Date.now.monthAndYear.adding(months: -2)!...Date.now.monthAndYear.adding(months:
     ScrollView {
         CalendarView(days: previewDays, range: previewRange) { day in
             PreviewDayCell(day: day)
-        } header: {
-            PreviewHeaderView()
+        } header: { context in
+            PreviewHeaderView(context: context)
         } weekday: { symbol in
             PreviewWeekdayLabel(symbol: symbol)
         }
@@ -53,8 +53,8 @@ Date.now.monthAndYear.adding(months: -2)!...Date.now.monthAndYear.adding(months:
     ScrollView {
         CalendarView(days: previewDays) { day in
             PreviewDayCell(day: day)
-        } header: {
-            PreviewHeaderView()
+        } header: { context in
+            PreviewHeaderView(context: context)
         }
         .border(.black)
     }
@@ -72,7 +72,7 @@ private struct PreviewWeekdayLabel: View {
 }
 
 private struct PreviewHeaderView: View {
-    @Environment(\.calendarHeaderContext) private var context
+    let context: CalendarHeaderContext
 
     var body: some View {
         HStack {
