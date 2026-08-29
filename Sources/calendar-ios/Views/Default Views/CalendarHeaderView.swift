@@ -12,25 +12,58 @@ public struct CalendarHeaderView: View {
         HStack {
             HStack(spacing: 16) {
                 navigationButton(systemName: "chevron.left") {
-                    context.changeMonth(by: -1)
+                    if context.displayMode == .year {
+                        context.changeYear(by: -1)
+                    } else {
+                        context.changeMonth(by: -1)
+                    }
                 }
-                .disabled(context.canGoToPreviousMonth == false)
-                .accessibilityLabel("Previous month")
+                .disabled(isBackwardDisabled)
+                .accessibilityLabel(context.displayMode == .year ? "Previous year" : "Previous month")
                 Spacer()
-                Text(context.month.formatted(.dateTime.month(.wide).year()))
+                Text(title)
                     .font(.subheadline.weight(.semibold))
                     .dynamicTypeSize(.large ... .xxxLarge)
                     .contentTransition(.opacity)
                     .lineLimit(1)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        context.toggleDisplayMode()
+                    }
                 Spacer()
                 navigationButton(systemName: "chevron.right") {
-                    context.changeMonth(by: 1)
+                    if context.displayMode == .year {
+                        context.changeYear(by: 1)
+                    } else {
+                        context.changeMonth(by: 1)
+                    }
                 }
-                .disabled(context.canGoToNextMonth == false)
-                .accessibilityLabel("Next month")
+                .disabled(isForwardDisabled)
+                .accessibilityLabel(context.displayMode == .year ? "Next year" : "Next month")
             }
         }
         .animation(.easeInOut(duration: 0.25), value: context.month)
+    }
+
+    private var title: String {
+        if context.displayMode == .year {
+            return String(context.pickerYear)
+        }
+        return context.month.formatted(.dateTime.month(.wide).year())
+    }
+
+    private var isBackwardDisabled: Bool {
+        if context.displayMode == .year {
+            return context.canGoToPreviousYear == false
+        }
+        return context.canGoToPreviousMonth == false
+    }
+
+    private var isForwardDisabled: Bool {
+        if context.displayMode == .year {
+            return context.canGoToNextYear == false
+        }
+        return context.canGoToNextMonth == false
     }
 
     private func navigationButton(systemName: String, action: @escaping () -> Void) -> some View {

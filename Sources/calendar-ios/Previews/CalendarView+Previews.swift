@@ -77,28 +77,63 @@ private struct PreviewHeaderView: View {
     var body: some View {
         HStack {
             Button {
-                context.changeMonth(by: -1)
+                if context.displayMode == .year {
+                    context.changeYear(by: -1)
+                } else {
+                    context.changeMonth(by: -1)
+                }
             } label: {
                 Image(systemName: "hand.point.left")
             }
-            .disabled(context.canGoToPreviousMonth == false)
+            .disabled(isBackwardDisabled)
+            .accessibilityLabel(context.displayMode == .year ? "Previous year" : "Previous month")
 
             Spacer()
 
-            Text(context.month.formatted(.dateTime.month(.wide).year()))
+            Text(title)
                 .font(.headline)
                 .italic()
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    context.toggleDisplayMode()
+                }
 
             Spacer()
 
             Button {
-                context.changeMonth(by: 1)
+                if context.displayMode == .year {
+                    context.changeYear(by: 1)
+                } else {
+                    context.changeMonth(by: 1)
+                }
             } label: {
                 Image(systemName: "hand.point.right")
             }
-            .disabled(context.canGoToNextMonth == false)
+            .disabled(isForwardDisabled)
+            .accessibilityLabel(context.displayMode == .year ? "Next year" : "Next month")
         }
         .dynamicTypeSize(.large ... .accessibility1)
+    }
+
+    private var title: String {
+        if context.displayMode == .year {
+            return String(context.pickerYear)
+        }
+        return context.month.formatted(.dateTime.month(.wide).year())
+    }
+
+    private var isBackwardDisabled: Bool {
+        if context.displayMode == .year {
+            return context.canGoToPreviousYear == false
+        }
+        return context.canGoToPreviousMonth == false
+    }
+
+    private var isForwardDisabled: Bool {
+        if context.displayMode == .year {
+            return context.canGoToNextYear == false
+        }
+        return context.canGoToNextMonth == false
     }
 }
 

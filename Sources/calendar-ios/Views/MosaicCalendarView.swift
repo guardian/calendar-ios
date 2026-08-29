@@ -10,7 +10,7 @@ public struct MosaicCalendarView<Header: View, Cell: View>: View {
     @State private var selectedDate: Date? = Date()
 
     /// Observable month state consumed by custom headers.
-    @State private var headerContext: CalendarHeaderContext
+    @State var headerContext: CalendarHeaderContext
 
     /// Days keyed by the start of their date.
     private let daysByDate: [Date: any CalendarDayRepresentable]
@@ -54,12 +54,16 @@ public struct MosaicCalendarView<Header: View, Cell: View>: View {
 
         // Start centered on the current month or clamp to the nearest month in range.
         let initialMonth = Self.initialMonth(for: anchor, in: months)
+        let minimumVisibleYear = calendar.component(.year, from: months.first ?? anchor)
+        let maximumVisibleYear = calendar.component(.year, from: months.last ?? anchor)
         _scrolledMonth = State(initialValue: initialMonth)
         _headerContext = State(
             initialValue: CalendarHeaderContext(
                 month: initialMonth,
                 canGoToPreviousMonth: initialMonth != months.first,
-                canGoToNextMonth: initialMonth != months.last
+                canGoToNextMonth: initialMonth != months.last,
+                minimumVisibleYear: minimumVisibleYear,
+                maximumVisibleYear: maximumVisibleYear
             )
         )
     }
@@ -86,12 +90,16 @@ public struct MosaicCalendarView<Header: View, Cell: View>: View {
 
         // Start centered on the current month or clamp to the nearest month in range.
         let initialMonth = Self.initialMonth(for: anchor, in: months)
+        let minimumVisibleYear = calendar.component(.year, from: months.first ?? anchor)
+        let maximumVisibleYear = calendar.component(.year, from: months.last ?? anchor)
         _scrolledMonth = State(initialValue: initialMonth)
         _headerContext = State(
             initialValue: CalendarHeaderContext(
                 month: initialMonth,
                 canGoToPreviousMonth: initialMonth != months.first,
-                canGoToNextMonth: initialMonth != months.last
+                canGoToNextMonth: initialMonth != months.last,
+                minimumVisibleYear: minimumVisibleYear,
+                maximumVisibleYear: maximumVisibleYear
             )
         )
     }
@@ -108,7 +116,11 @@ public struct MosaicCalendarView<Header: View, Cell: View>: View {
     public var body: some View {
         VStack(spacing: 0) {
             headerContent(headerContext)
-            pager
+            if headerContext.displayMode == .month {
+                pager
+            } else {
+                monthPicker
+            }
         }
         .onAppear {
             syncHeaderContext()
@@ -122,6 +134,12 @@ public struct MosaicCalendarView<Header: View, Cell: View>: View {
             guard let value = headerContext.requestedMonthOffset else { return }
             headerContext.clearRequestedMonthOffset()
             changeMonth(by: value)
+        }
+        .onChange(of: headerContext.requestedMonthSelection) {
+            guard let value = headerContext.requestedMonthSelection else { return }
+            headerContext.clearRequestedMonthSelection()
+            setDisplayedMonth(to: value)
+            notifyMonthChange()
         }
         .onChange(of: selectedDate) { notifyDateSelect() }
     }

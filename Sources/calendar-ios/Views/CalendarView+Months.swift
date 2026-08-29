@@ -2,6 +2,28 @@ import SwiftUI
 
 extension MosaicCalendarView {
 
+    func setDisplayedMonth(to requestedMonth: Date) {
+        let normalizedMonth = requestedMonth.monthAndYear
+
+        if months.contains(normalizedMonth) {
+            withAnimation(.easeInOut(duration: 0.25)) {
+                scrolledMonth = normalizedMonth
+            }
+            return
+        }
+
+        if let first = months.first, normalizedMonth < first {
+            withAnimation(.easeInOut(duration: 0.25)) {
+                scrolledMonth = first
+            }
+            return
+        }
+
+        withAnimation(.easeInOut(duration: 0.25)) {
+            scrolledMonth = months.last ?? normalizedMonth
+        }
+    }
+
     func changeMonth(by value: Int) {
         guard let index = months.firstIndex(of: displayedMonth),
               months.indices.contains(index + value)
