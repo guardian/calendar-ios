@@ -116,13 +116,18 @@ public struct MosaicCalendarView<Header: View, Cell: View>: View {
     public var body: some View {
         VStack(spacing: 0) {
             headerContent(headerContext)
-            if headerContext.displayMode == .month {
+            ZStack {
                 pager
-            } else {
+                    .scaleEffect(x: headerContext.displayMode == .year ? 0.9 : 1, y: headerContext.displayMode == .year ? 0.9 : 1, anchor: .center)
+                    .opacity(headerContext.displayMode == .year ? 0.01 : 1)
                 monthPicker
                     .frame(maxWidth: .infinity)
                     .aspectRatio(1, contentMode: .fit)
+                    .blur(radius: headerContext.displayMode == .month ? 5 : 0)
+                    .scaleEffect(x: headerContext.displayMode == .month ? 1.1 : 1, y: headerContext.displayMode == .month ? 1.1 : 1, anchor: .center)
+                    .opacity(headerContext.displayMode == .month ? 0.01 : 1)
             }
+            .animation(.spring, value: headerContext.displayMode)
         }
         .onAppear {
             syncHeaderContext()

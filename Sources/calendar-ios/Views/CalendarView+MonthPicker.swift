@@ -17,6 +17,7 @@ extension MosaicCalendarView {
                 }
             }
             .frame(width: proxy.size.width, height: proxy.size.height, alignment: .top)
+            .padding(.top, 8)
         }
     }
 
