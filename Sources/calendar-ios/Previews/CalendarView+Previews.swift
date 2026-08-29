@@ -35,6 +35,7 @@ Date.now.monthAndYear.adding(months: -2)!...Date.now.monthAndYear.adding(months:
             print("Month changed")
         }
         .padding()
+        .border(.purple)
     }
 }
 

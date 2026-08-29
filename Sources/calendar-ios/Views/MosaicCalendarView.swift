@@ -120,6 +120,8 @@ public struct MosaicCalendarView<Header: View, Cell: View>: View {
                 pager
             } else {
                 monthPicker
+                    .frame(maxWidth: .infinity)
+                    .aspectRatio(1, contentMode: .fit)
             }
         }
         .onAppear {
@@ -138,8 +140,14 @@ public struct MosaicCalendarView<Header: View, Cell: View>: View {
         .onChange(of: headerContext.requestedMonthSelection) {
             guard let value = headerContext.requestedMonthSelection else { return }
             headerContext.clearRequestedMonthSelection()
-            setDisplayedMonth(to: value)
-            notifyMonthChange()
+            headerContext.showMonthView()
+
+            // Wait one UI cycle so the pager is mounted before animating to selection.
+            Task { @MainActor in
+                await Task.yield()
+                setDisplayedMonth(to: value)
+                notifyMonthChange()
+            }
         }
         .onChange(of: selectedDate) { notifyDateSelect() }
     }

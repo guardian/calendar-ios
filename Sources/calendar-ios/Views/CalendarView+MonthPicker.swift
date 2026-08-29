@@ -4,15 +4,19 @@ extension MosaicCalendarView {
 
     /// A compact 3x4 month grid used when the header enters month-picker mode.
     var monthPicker: some View {
-        let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 3)
+        let spacing: CGFloat = 8
+        let columns = Array(repeating: GridItem(.flexible(), spacing: spacing), count: 3)
 
-        return VStack(spacing: 12) {
-            LazyVGrid(columns: columns, spacing: 8) {
+        return GeometryReader { proxy in
+            let cellHeight = max(0, (proxy.size.height - (spacing * 3)) / 4)
+
+            LazyVGrid(columns: columns, spacing: spacing) {
                 ForEach(1...12, id: \.self) { monthNumber in
                     monthPickerButton(monthNumber: monthNumber)
+                        .frame(height: cellHeight)
                 }
             }
-            .aspectRatio(1, contentMode: .fit)
+            .frame(width: proxy.size.width, height: proxy.size.height, alignment: .top)
         }
     }
 

@@ -25,7 +25,7 @@ public final class CalendarHeaderContext: CalendarHeaderContextRepresentable {
         maximumVisibleYear: Int
     ) {
         let year = Calendar.current.component(.year, from: month)
-        self.displayMode = .year
+        self.displayMode = .month
         self.month = month
         self.pickerYear = year
         self.canGoToPreviousMonth = canGoToPreviousMonth
