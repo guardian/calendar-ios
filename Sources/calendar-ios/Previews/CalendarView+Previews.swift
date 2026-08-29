@@ -19,7 +19,7 @@ Date.now.monthAndYear.adding(months: -24)!...Date.now.monthAndYear.adding(months
     }
 }
 
-#Preview("Custom Header + Custom Weekday + Callbacks") {
+#Preview("Custom Header + Custom Weekday + Month Picker + Callbacks") {
     ScrollView {
         MosaicCalendarView(days: previewDays, range: previewRange) { day in
             PreviewDayCell(day: day)
@@ -27,6 +27,8 @@ Date.now.monthAndYear.adding(months: -24)!...Date.now.monthAndYear.adding(months
             PreviewHeaderView(context: context)
         } weekday: { symbol in
             PreviewWeekdayLabel(symbol: symbol)
+        } month: { context in
+            PreviewMonthPickerCell(context: context)
         }
         .onDateSelected { _, _ in
             print("Date selected")
@@ -169,6 +171,21 @@ private struct PreviewDayCell: View {
     private var accessibilityLabel: String {
         let base = day.date.formatted(.dateTime.weekday(.wide).month(.wide).day())
         return day.isToday ? "\(base), Today" : base
+    }
+}
+
+private struct PreviewMonthPickerCell: View {
+    let context: CalendarMonthPickerCellContext
+
+    var body: some View {
+        Text(context.monthLabel)
+            .font(.caption.weight(.bold))
+            .foregroundStyle(context.isSelected ? Color.white : Color.purple)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(context.isSelected ? Color.purple : Color.purple.opacity(0.15))
+            }
     }
 }
 

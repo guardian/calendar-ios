@@ -27,24 +27,39 @@ extension MosaicCalendarView {
         let monthDate = calendar.date(from: DateComponents(year: headerContext.pickerYear, month: monthNumber, day: 1))?.monthAndYear
         let isEnabled = monthDate.map { months.contains($0) } ?? false
         let isSelected = monthDate.map { calendar.isDate($0, equalTo: displayedMonth, toGranularity: .month) } ?? false
+        let context = CalendarMonthPickerCellContext(
+            monthNumber: monthNumber,
+            monthLabel: monthLabel,
+            monthDate: monthDate,
+            isSelected: isSelected,
+            isEnabled: isEnabled
+        )
 
         return Button {
             guard let monthDate else { return }
             headerContext.selectMonth(monthDate)
         } label: {
-            Text(monthLabel)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(isSelected ? Color.white : Color.primary)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(.vertical, 10)
-                .background {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(isSelected ? Color.accentColor : Color.secondary.opacity(0.12))
-                }
+            if let monthPickerCellContent {
+                monthPickerCellContent(context)
+            } else {
+                defaultMonthPickerCell(context: context)
+            }
         }
         .buttonStyle(.plain)
         .disabled(isEnabled == false)
         .opacity(isEnabled ? 1 : 0.35)
         .accessibilityLabel(monthLabel)
+    }
+
+    private func defaultMonthPickerCell(context: CalendarMonthPickerCellContext) -> some View {
+        Text(context.monthLabel)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(context.isSelected ? Color.white : Color.primary)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.vertical, 10)
+            .background {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(context.isSelected ? Color.accentColor : Color.secondary.opacity(0.12))
+            }
     }
 }

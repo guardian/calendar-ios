@@ -24,6 +24,9 @@ public struct MosaicCalendarView<Header: View, Cell: View>: View {
     /// Optionally builds the view for a weekday label symbol.
     private let weekdayLabelContent: ((String) -> AnyView)?
 
+    /// Optionally builds the view for a month picker cell.
+    let monthPickerCellContent: ((CalendarMonthPickerCellContext) -> AnyView)?
+
     /// Called whenever the visible month changes, with that month's date interval.
     private var monthChangeHandler: ((DateInterval) -> Void)?
 
@@ -48,6 +51,7 @@ public struct MosaicCalendarView<Header: View, Cell: View>: View {
         cellContent = cell
         headerContent = header
         weekdayLabelContent = nil
+        monthPickerCellContent = nil
 
         let anchor = calendar.date(from: calendar.dateComponents([.year, .month], from: .now)) ?? .now
         months = Self.makeVisibleMonths(calendar: calendar, range: range, anchor: anchor)
@@ -84,6 +88,82 @@ public struct MosaicCalendarView<Header: View, Cell: View>: View {
         cellContent = cell
         headerContent = header
         weekdayLabelContent = { symbol in AnyView(weekday(symbol)) }
+        monthPickerCellContent = nil
+
+        let anchor = calendar.date(from: calendar.dateComponents([.year, .month], from: .now)) ?? .now
+        months = Self.makeVisibleMonths(calendar: calendar, range: range, anchor: anchor)
+
+        // Start centered on the current month or clamp to the nearest month in range.
+        let initialMonth = Self.initialMonth(for: anchor, in: months)
+        let minimumVisibleYear = calendar.component(.year, from: months.first ?? anchor)
+        let maximumVisibleYear = calendar.component(.year, from: months.last ?? anchor)
+        _scrolledMonth = State(initialValue: initialMonth)
+        _headerContext = State(
+            initialValue: CalendarHeaderContext(
+                month: initialMonth,
+                canGoToPreviousMonth: initialMonth != months.first,
+                canGoToNextMonth: initialMonth != months.last,
+                minimumVisibleYear: minimumVisibleYear,
+                maximumVisibleYear: maximumVisibleYear
+            )
+        )
+    }
+
+    public init<MonthPickerCell: View>(
+        days: [any CalendarDayRepresentable] = [],
+        range: ClosedRange<Date>? = nil,
+        @ViewBuilder cell: @escaping (any CalendarDayRepresentable) -> Cell,
+        @ViewBuilder header: @escaping (CalendarHeaderContext) -> Header,
+        @ViewBuilder monthPickerCell: @escaping (CalendarMonthPickerCellContext) -> MonthPickerCell
+    ) {
+        let calendar = Calendar.current
+
+        daysByDate = Dictionary(
+            days.map { (calendar.startOfDay(for: $0.date), $0) },
+            uniquingKeysWith: { first, _ in first }
+        )
+        cellContent = cell
+        headerContent = header
+        weekdayLabelContent = nil
+        monthPickerCellContent = { context in AnyView(monthPickerCell(context)) }
+ 
+        let anchor = calendar.date(from: calendar.dateComponents([.year, .month], from: .now)) ?? .now
+        months = Self.makeVisibleMonths(calendar: calendar, range: range, anchor: anchor)
+
+        // Start centered on the current month or clamp to the nearest month in range.
+        let initialMonth = Self.initialMonth(for: anchor, in: months)
+        let minimumVisibleYear = calendar.component(.year, from: months.first ?? anchor)
+        let maximumVisibleYear = calendar.component(.year, from: months.last ?? anchor)
+        _scrolledMonth = State(initialValue: initialMonth)
+        _headerContext = State(
+            initialValue: CalendarHeaderContext(
+                month: initialMonth,
+                canGoToPreviousMonth: initialMonth != months.first,
+                canGoToNextMonth: initialMonth != months.last,
+                minimumVisibleYear: minimumVisibleYear,
+                maximumVisibleYear: maximumVisibleYear
+            )
+        )
+    }
+
+    public init<WeekdayLabel: View, MonthPickerCell: View>(
+        days: [any CalendarDayRepresentable] = [],
+        range: ClosedRange<Date>? = nil,
+        @ViewBuilder cell: @escaping (any CalendarDayRepresentable) -> Cell,
+        @ViewBuilder header: @escaping (CalendarHeaderContext) -> Header,
+        @ViewBuilder weekday: @escaping (String) -> WeekdayLabel,
+        @ViewBuilder month: @escaping (CalendarMonthPickerCellContext) -> MonthPickerCell
+    ) {
+        let calendar = Calendar.current
+
+        daysByDate = Dictionary(
+            days.map { (calendar.startOfDay(for: $0.date), $0) },
+            uniquingKeysWith: { first, _ in first }
+        )
+        cellContent = cell
+        headerContent = header
+        weekdayLabelContent = { symbol in AnyView(weekday(symbol)) }
+        monthPickerCellContent = { context in AnyView(month(context)) }
 
         let anchor = calendar.date(from: calendar.dateComponents([.year, .month], from: .now)) ?? .now
         months = Self.makeVisibleMonths(calendar: calendar, range: range, anchor: anchor)
@@ -137,6 +217,20 @@ public struct MosaicCalendarView<Header: View, Cell: View>: View {
             syncHeaderContext()
             notifyMonthChange()
         }
+        .onChange(of: headerContext.pickerYear) {
+            guard headerContext.displayMode == .year else { return }
+
+            let calendar = Calendar.current
+            let currentMonth = calendar.component(.month, from: displayedMonth)
+            guard let requestedMonth = calendar.date(from: DateComponents(year: headerContext.pickerYear, month: currentMonth, day: 1)) else {
+                return
+            }
+
+            setDisplayedMonth(to: requestedMonth)
+        }
+        .onChange(of: headerContext.displayMode, { oldValue, newValue in
+
+        })
         .onChange(of: headerContext.requestedMonthOffset) {
             guard let value = headerContext.requestedMonthOffset else { return }
             headerContext.clearRequestedMonthOffset()
