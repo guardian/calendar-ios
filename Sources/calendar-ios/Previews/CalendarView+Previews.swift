@@ -8,7 +8,7 @@ private let previewDays: [PreviewCalendarDay] = [
 ]
 
 private let previewRange: ClosedRange<Date> =
-Date.now.monthAndYear.adding(months: -2)!...Date.now.monthAndYear.adding(months: 1)!
+Date.now.monthAndYear.adding(months: -24)!...Date.now.monthAndYear.adding(months: 24)!
 
 #Preview("Basic") {
     ScrollView {
