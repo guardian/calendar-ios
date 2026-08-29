@@ -1,6 +1,6 @@
 import SwiftUI
 
-public extension CalendarView where Header == CalendarHeaderView {
+public extension MosaicCalendarView where Header == CalendarHeaderView {
     init(
         days: [any CalendarDayRepresentable] = [],
         range: ClosedRange<Date>? = nil,

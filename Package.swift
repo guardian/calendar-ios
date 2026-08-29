@@ -4,22 +4,22 @@
 import PackageDescription
 
 let package = Package(
-    name: "Calendar-iOS",
+    name: "MosaicCalendar",
     platforms: [
         .iOS(.v18)
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
-            name: "Calendar-iOS",
-            targets: ["Calendar-iOS"]
+            name: "MosaicCalendar",
+            targets: ["MosaicCalendar"]
         ),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "Calendar-iOS"
+            name: "MosaicCalendar"
         ),
 
     ],

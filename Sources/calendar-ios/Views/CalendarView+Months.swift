@@ -1,6 +1,6 @@
 import SwiftUI
 
-extension CalendarView {
+extension MosaicCalendarView {
 
     func changeMonth(by value: Int) {
         guard let index = months.firstIndex(of: displayedMonth),

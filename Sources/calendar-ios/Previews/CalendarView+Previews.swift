@@ -12,7 +12,7 @@ Date.now.monthAndYear.adding(months: -2)!...Date.now.monthAndYear.adding(months:
 
 #Preview("Basic") {
     ScrollView {
-        CalendarView(days: previewDays) { day in
+        MosaicCalendarView(days: previewDays) { day in
             Text(day.date.formatted(.dateTime.day()))
                 .foregroundStyle(day.isSelected ? .blue : day.isToday ? .orange : .primary)
         }
@@ -21,7 +21,7 @@ Date.now.monthAndYear.adding(months: -2)!...Date.now.monthAndYear.adding(months:
 
 #Preview("Custom Header + Custom Weekday + Callbacks") {
     ScrollView {
-        CalendarView(days: previewDays, range: previewRange) { day in
+        MosaicCalendarView(days: previewDays, range: previewRange) { day in
             PreviewDayCell(day: day)
         } header: { context in
             PreviewHeaderView(context: context)
@@ -40,7 +40,7 @@ Date.now.monthAndYear.adding(months: -2)!...Date.now.monthAndYear.adding(months:
 
 #Preview("Default Header + Weekday Labels") {
     ScrollView {
-        CalendarView(days: previewDays) { day in
+        MosaicCalendarView(days: previewDays) { day in
             PreviewDayCell(day: day)
         } weekdayLabel: { symbol in
             PreviewWeekdayLabel(symbol: symbol)
@@ -51,7 +51,7 @@ Date.now.monthAndYear.adding(months: -2)!...Date.now.monthAndYear.adding(months:
 
 #Preview("Custom Header") {
     ScrollView {
-        CalendarView(days: previewDays) { day in
+        MosaicCalendarView(days: previewDays) { day in
             PreviewDayCell(day: day)
         } header: { context in
             PreviewHeaderView(context: context)
