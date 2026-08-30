@@ -13,7 +13,7 @@ extension MosaicCalendarView {
 
     /// A compact 3x4 month grid used when the header enters month-picker mode.
     var monthPicker: some View {
-        let spacing: CGFloat = 8
+        let spacing: CGFloat = 0
         let columns = Array(repeating: GridItem(.flexible(), spacing: spacing), count: 3)
 
         return TabView(selection: Binding(
@@ -30,7 +30,7 @@ extension MosaicCalendarView {
                                 .frame(height: cellHeight)
                         }
                     }
-                    .frame(width: proxy.size.width, height: proxy.size.height, alignment: .top)
+                    .frame(width: proxy.size.width - spacing, height: proxy.size.height, alignment: .top)
                 }
                 .tag(year)
             }

@@ -196,7 +196,7 @@ public struct MosaicCalendarView<Header: View, Cell: View>: View {
     public var body: some View {
         VStack(spacing: 0) {
             headerContent(headerContext)
-            ZStack {
+            ZStack(alignment: .top) {
                 pager
                     .scaleEffect(x: headerContext.displayMode == .year ? 0.9 : 1, y: headerContext.displayMode == .year ? 0.9 : 1, anchor: .center)
                     .opacity(headerContext.displayMode == .year ? 0.01 : 1)

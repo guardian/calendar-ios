@@ -186,6 +186,7 @@ private struct PreviewMonthPickerCell: View {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .fill(context.isSelected ? Color.purple : Color.purple.opacity(0.15))
             }
+            .padding(5)
     }
 }
 
