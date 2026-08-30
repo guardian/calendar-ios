@@ -13,7 +13,7 @@ Date.now.monthAndYear.adding(months: -24)!...Date.now.monthAndYear.adding(months
 #Preview("Basic") {
     ScrollView {
         MosaicCalendarView(days: previewDays) { day in
-            PreviewDayCell(day: day)
+            BasicPreviewDayCell(day: day)
         }
     }
 }
@@ -73,8 +73,8 @@ private struct PreviewWeekdayLabel: View {
     }
 }
 
-private struct PreviewHeaderView: View {
-    let context: CalendarHeaderContext
+private struct PreviewHeaderView: CalendarHeaderViewable {
+    let context: any CalendarHeaderContextRepresentable
 
     var body: some View {
         HStack {
@@ -139,7 +139,16 @@ private struct PreviewHeaderView: View {
     }
 }
 
-private struct PreviewDayCell: View, @MainActor CalendarDayViewable {
+private struct BasicPreviewDayCell: View, CalendarDayViewable {
+    let day: any CalendarDayRepresentable
+
+    var body: some View {
+        Text(day.date.formatted(.dateTime.day()))
+            .foregroundStyle(day.isSelected ? .blue : day.isToday ? .orange : .primary)
+    }
+}
+
+private struct PreviewDayCell: CalendarDayViewable {
     var day: any CalendarDayRepresentable
 
     var previewDay: PreviewCalendarDay? {

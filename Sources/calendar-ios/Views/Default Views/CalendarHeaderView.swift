@@ -1,10 +1,10 @@
 import SwiftUI
 
 /// The calendar's month title and previous/next chevrons.
-public struct CalendarHeaderView: View {
-    let context: CalendarHeaderContext
+public struct CalendarHeaderView: CalendarHeaderViewable {
+    public let context: any CalendarHeaderContextRepresentable
 
-    public init(context: CalendarHeaderContext) {
+    public init(context: any CalendarHeaderContextRepresentable) {
         self.context = context
     }
 
