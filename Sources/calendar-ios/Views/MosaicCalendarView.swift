@@ -1,7 +1,7 @@
 import SwiftUI
 
 @MainActor
-public struct MosaicCalendarView<Header: View, Cell: View>: View {
+public struct MosaicCalendarView<Header: View, Cell: CalendarDayViewable>: View {
 
     /// The month currently scrolled into view (a start-of-month date).
     @State var scrolledMonth: Date?
