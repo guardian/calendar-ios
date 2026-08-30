@@ -116,7 +116,11 @@ MosaicCalendarView(days: days) { day in
 
 ### 5) Fully custom (header + weekday + month picker)
 
-When you provide a custom `header`, the initializer labels are `weekday` and `month`:
+`MosaicCalendarView` has separate overloads:
+- Default header overloads use `weekdayLabel` and `monthPickerCell`.
+- Custom header overloads use `weekday` and `month`.
+
+When you provide a custom `header`, use the `weekday` and `month` labels:
 
 ```swift
 MosaicCalendarView(days: days, range: range) { day in
