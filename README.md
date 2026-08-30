@@ -1,4 +1,4 @@
-<img width="200" alt="Group 533" src="https://github.com/user-attachments/assets/ddd16d56-cc05-4b00-990f-c2ba08fd4c92" />
+<img width="245" alt="Group 533" src="https://github.com/user-attachments/assets/ddd16d56-cc05-4b00-990f-c2ba08fd4c92" />
 
 
 # Mosaic Calendar
