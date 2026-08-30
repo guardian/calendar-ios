@@ -217,17 +217,6 @@ public struct MosaicCalendarView<Header: View, Cell: View>: View {
             syncHeaderContext()
             notifyMonthChange()
         }
-        .onChange(of: headerContext.pickerYear) {
-            guard headerContext.displayMode == .year else { return }
-
-            let calendar = Calendar.current
-            let currentMonth = calendar.component(.month, from: displayedMonth)
-            guard let requestedMonth = calendar.date(from: DateComponents(year: headerContext.pickerYear, month: currentMonth, day: 1)) else {
-                return
-            }
-
-            setDisplayedMonth(to: requestedMonth)
-        }
         .onChange(of: headerContext.displayMode, { oldValue, newValue in
 
         })

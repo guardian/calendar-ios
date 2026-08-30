@@ -26,7 +26,7 @@ extension MosaicCalendarView {
         let monthLabel = symbols[max(0, min(symbols.count - 1, monthNumber - 1))]
         let monthDate = calendar.date(from: DateComponents(year: headerContext.pickerYear, month: monthNumber, day: 1))?.monthAndYear
         let isEnabled = monthDate.map { months.contains($0) } ?? false
-        let isSelected = monthDate.map { calendar.isDate($0, equalTo: displayedMonth, toGranularity: .month) } ?? false
+        let isSelected = monthDate.map { $0 == displayedMonth.monthAndYear } ?? false
         let context = CalendarMonthPickerCellContext(
             monthNumber: monthNumber,
             monthLabel: monthLabel,
