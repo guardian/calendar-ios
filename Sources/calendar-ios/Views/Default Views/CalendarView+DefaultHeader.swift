@@ -21,4 +21,27 @@ public extension MosaicCalendarView where Header == CalendarHeaderView {
             CalendarHeaderView(context: context)
         }, weekday: weekdayLabel)
     }
+
+    init<MonthPickerCell: View>(
+        days: [any CalendarDayRepresentable] = [],
+        range: ClosedRange<Date>? = nil,
+        @ViewBuilder cell: @escaping (any CalendarDayRepresentable) -> Cell,
+        @ViewBuilder monthPickerCell: @escaping (CalendarMonthPickerCellContext) -> MonthPickerCell
+    ) {
+        self.init(days: days, range: range, cell: cell, header: { context in
+            CalendarHeaderView(context: context)
+        }, monthPickerCell: monthPickerCell)
+    }
+
+    init<WeekdayLabel: View, MonthPickerCell: View>(
+        days: [any CalendarDayRepresentable] = [],
+        range: ClosedRange<Date>? = nil,
+        @ViewBuilder cell: @escaping (any CalendarDayRepresentable) -> Cell,
+        @ViewBuilder weekdayLabel: @escaping (String) -> WeekdayLabel,
+        @ViewBuilder month: @escaping (CalendarMonthPickerCellContext) -> MonthPickerCell
+    ) {
+        self.init(days: days, range: range, cell: cell, header: { context in
+            CalendarHeaderView(context: context)
+        }, weekday: weekdayLabel, month: month)
+    }
 }

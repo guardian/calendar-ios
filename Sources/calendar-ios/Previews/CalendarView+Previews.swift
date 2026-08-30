@@ -8,7 +8,7 @@ private let previewDays: [PreviewCalendarDay] = [
 ]
 
 private let previewRange: ClosedRange<Date> =
-Date.now.monthAndYear.adding(months: -2)!...Date.now.monthAndYear.adding(months: 1)!
+Date.now.monthAndYear.adding(months: -24)!...Date.now.monthAndYear.adding(months: 24)!
 
 #Preview("Basic") {
     ScrollView {
@@ -19,7 +19,7 @@ Date.now.monthAndYear.adding(months: -2)!...Date.now.monthAndYear.adding(months:
     }
 }
 
-#Preview("Custom Header + Custom Weekday + Callbacks") {
+#Preview("Custom Header + Custom Weekday + Month Picker + Callbacks") {
     ScrollView {
         MosaicCalendarView(days: previewDays, range: previewRange) { day in
             PreviewDayCell(day: day)
@@ -27,6 +27,8 @@ Date.now.monthAndYear.adding(months: -2)!...Date.now.monthAndYear.adding(months:
             PreviewHeaderView(context: context)
         } weekday: { symbol in
             PreviewWeekdayLabel(symbol: symbol)
+        } month: { context in
+            PreviewMonthPickerCell(context: context)
         }
         .onDateSelected { _, _ in
             print("Date selected")
@@ -35,6 +37,7 @@ Date.now.monthAndYear.adding(months: -2)!...Date.now.monthAndYear.adding(months:
             print("Month changed")
         }
         .padding()
+        .border(.purple)
     }
 }
 
@@ -77,28 +80,63 @@ private struct PreviewHeaderView: View {
     var body: some View {
         HStack {
             Button {
-                context.changeMonth(by: -1)
+                if context.displayMode == .year {
+                    context.changeYear(by: -1)
+                } else {
+                    context.changeMonth(by: -1)
+                }
             } label: {
                 Image(systemName: "hand.point.left")
             }
-            .disabled(context.canGoToPreviousMonth == false)
+            .disabled(isBackwardDisabled)
+            .accessibilityLabel(context.displayMode == .year ? "Previous year" : "Previous month")
 
             Spacer()
 
-            Text(context.month.formatted(.dateTime.month(.wide).year()))
+            Text(title)
                 .font(.headline)
                 .italic()
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    context.toggleDisplayMode()
+                }
 
             Spacer()
 
             Button {
-                context.changeMonth(by: 1)
+                if context.displayMode == .year {
+                    context.changeYear(by: 1)
+                } else {
+                    context.changeMonth(by: 1)
+                }
             } label: {
                 Image(systemName: "hand.point.right")
             }
-            .disabled(context.canGoToNextMonth == false)
+            .disabled(isForwardDisabled)
+            .accessibilityLabel(context.displayMode == .year ? "Next year" : "Next month")
         }
         .dynamicTypeSize(.large ... .accessibility1)
+    }
+
+    private var title: String {
+        if context.displayMode == .year {
+            return String(context.pickerYear)
+        }
+        return context.month.formatted(.dateTime.month(.wide).year())
+    }
+
+    private var isBackwardDisabled: Bool {
+        if context.displayMode == .year {
+            return context.canGoToPreviousYear == false
+        }
+        return context.canGoToPreviousMonth == false
+    }
+
+    private var isForwardDisabled: Bool {
+        if context.displayMode == .year {
+            return context.canGoToNextYear == false
+        }
+        return context.canGoToNextMonth == false
     }
 }
 
@@ -133,6 +171,22 @@ private struct PreviewDayCell: View {
     private var accessibilityLabel: String {
         let base = day.date.formatted(.dateTime.weekday(.wide).month(.wide).day())
         return day.isToday ? "\(base), Today" : base
+    }
+}
+
+private struct PreviewMonthPickerCell: View {
+    let context: CalendarMonthPickerCellContext
+
+    var body: some View {
+        Text(context.monthLabel)
+            .font(.caption.weight(.bold))
+            .foregroundStyle(context.isSelected ? Color.white : Color.purple)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(context.isSelected ? Color.purple : Color.purple.opacity(0.15))
+            }
+            .padding(5)
     }
 }
 
