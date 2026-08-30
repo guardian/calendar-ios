@@ -158,7 +158,7 @@ Called when the visible month changes (initial render, swipe, header navigation,
 }
 ```
 
-- `interval`: `DateInterval` for the currently visible month (`[startOfMonth, startOfNextMonth)`).
+- `interval`: `DateInterval` for the currently visible month, from `startOfMonth` to `startOfNextMonth`.
 
 ## API notes
 
