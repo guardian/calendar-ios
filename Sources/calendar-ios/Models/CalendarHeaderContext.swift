@@ -47,6 +47,12 @@ public final class CalendarHeaderContext: CalendarHeaderContextRepresentable {
         updateYearNavigationAvailability()
     }
 
+    func setPickerYear(_ year: Int) {
+        guard year >= minimumVisibleYear, year <= maximumVisibleYear else { return }
+        pickerYear = year
+        updateYearNavigationAvailability()
+    }
+
     public func toggleDisplayMode() {
         switch displayMode {
         case .month:
