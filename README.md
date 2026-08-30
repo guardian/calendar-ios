@@ -1,4 +1,7 @@
-# MosaicCalendarView
+<img width="200" alt="Group 533" src="https://github.com/user-attachments/assets/ddd16d56-cc05-4b00-990f-c2ba08fd4c92" />
+
+
+# Mosaic Calendar
 
 A modern, fully SwiftUI calendar with smooth month paging, built-in month picker, and flexible customization for cells, headers, weekday labels, and month tiles.
 
@@ -170,6 +173,10 @@ Called when the visible month changes (initial render, swipe, header navigation,
 - If `range` is provided, month navigation and month-picker availability are clamped to that range.
 - `days` are keyed by start-of-day date, so provide day-level dates (time components are ignored for matching).
 
-## License
 
-See the repository license for details.
+---
+
+Thank you for using Mosaic!
+
+*iOS Team, The Guardian*
+
