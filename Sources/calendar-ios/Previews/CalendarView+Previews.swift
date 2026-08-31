@@ -182,7 +182,7 @@ private struct PreviewDayCell: CalendarDayViewable {
     }
 }
 
-private struct PreviewMonthPickerCell: View {
+private struct PreviewMonthPickerCell: CalendarMonthViewable {
     let context: CalendarMonthPickerCellContext
 
     var body: some View {

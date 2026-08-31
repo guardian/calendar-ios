@@ -22,7 +22,7 @@ public extension MosaicCalendarView where Header == CalendarHeaderView {
         }, weekday: weekdayLabel)
     }
 
-    init<MonthPickerCell: View>(
+    init<MonthPickerCell: CalendarMonthViewable>(
         days: [any CalendarDayRepresentable] = [],
         range: ClosedRange<Date>? = nil,
         @ViewBuilder cell: @escaping (any CalendarDayRepresentable) -> Cell,
@@ -33,7 +33,7 @@ public extension MosaicCalendarView where Header == CalendarHeaderView {
         }, monthPickerCell: monthPickerCell)
     }
 
-    init<WeekdayLabel: View, MonthPickerCell: View>(
+    init<WeekdayLabel: View, MonthPickerCell: CalendarMonthViewable>(
         days: [any CalendarDayRepresentable] = [],
         range: ClosedRange<Date>? = nil,
         @ViewBuilder cell: @escaping (any CalendarDayRepresentable) -> Cell,

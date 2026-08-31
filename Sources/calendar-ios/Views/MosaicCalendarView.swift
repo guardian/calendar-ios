@@ -109,7 +109,7 @@ public struct MosaicCalendarView<Header: CalendarHeaderViewable, Cell: CalendarD
         )
     }
 
-    public init<MonthPickerCell: View>(
+    public init<MonthPickerCell: CalendarMonthViewable>(
         days: [any CalendarDayRepresentable] = [],
         range: ClosedRange<Date>? = nil,
         @ViewBuilder cell: @escaping (any CalendarDayRepresentable) -> Cell,
@@ -146,7 +146,7 @@ public struct MosaicCalendarView<Header: CalendarHeaderViewable, Cell: CalendarD
         )
     }
 
-    public init<WeekdayLabel: View, MonthPickerCell: View>(
+    public init<WeekdayLabel: View, MonthPickerCell: CalendarMonthViewable>(
         days: [any CalendarDayRepresentable] = [],
         range: ClosedRange<Date>? = nil,
         @ViewBuilder cell: @escaping (any CalendarDayRepresentable) -> Cell,
