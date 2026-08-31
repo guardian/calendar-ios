@@ -62,6 +62,27 @@ MosaicCalendarView(days: days) { day in
 .padding()
 ```
 
+## Protocols required for custom views
+
+Custom view structs passed into `MosaicCalendarView` must conform to the matching protocol:
+
+- Day cells: `CalendarDayViewable` and expose `var day: any CalendarDayRepresentable`
+- Custom headers: `CalendarHeaderViewable` and expose `var context: any CalendarHeaderContextRepresentable`
+- Custom weekday labels: `CalendarWeekdayViewable` and expose `var symbol: String`
+- Custom month picker tiles: `CalendarMonthViewable` and expose `var context: CalendarMonthPickerCellContext`
+
+Example day-cell struct:
+
+```swift
+struct DayCell: CalendarDayViewable {
+    let day: any CalendarDayRepresentable
+
+    var body: some View {
+        Text(day.date.formatted(.dateTime.day()))
+    }
+}
+```
+
 ## Usage examples
 
 ### 1) Restrict visible months with `range`
@@ -77,6 +98,14 @@ MosaicCalendarView(days: days, range: range) { day in
 ### 2) Custom header
 
 ```swift
+struct CustomHeader: CalendarHeaderViewable {
+    let context: any CalendarHeaderContextRepresentable
+
+    var body: some View {
+        Text(context.month.formatted(.dateTime.month(.wide).year()))
+    }
+}
+
 MosaicCalendarView(days: days) { day in
     DayCell(day: day)
 } header: { context in
@@ -94,26 +123,36 @@ Your header receives `CalendarHeaderContext`, which lets you:
 ### 3) Default header + custom weekday labels
 
 ```swift
+struct CustomWeekdayLabel: CalendarWeekdayViewable {
+    let symbol: String
+
+    var body: some View {
+        Text(symbol)
+    }
+}
+
 MosaicCalendarView(days: days) { day in
     DayCell(day: day)
 } weekdayLabel: { symbol in
-    Text(symbol)
-        .font(.caption.weight(.semibold))
-        .foregroundStyle(.secondary)
-        .frame(maxWidth: .infinity)
+    CustomWeekdayLabel(symbol: symbol)
 }
 ```
 
 ### 4) Default header + custom month picker tiles
 
 ```swift
+struct CustomMonthTile: CalendarMonthViewable {
+    let context: CalendarMonthPickerCellContext
+
+    var body: some View {
+        Text(context.monthLabel)
+    }
+}
+
 MosaicCalendarView(days: days) { day in
     DayCell(day: day)
 } monthPickerCell: { context in
-    Text(context.monthLabel)
-        .font(.caption.weight(.bold))
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(context.isSelected ? Color.accentColor : Color.secondary.opacity(0.12))
+    CustomMonthTile(context: context)
 }
 ```
 
@@ -179,4 +218,3 @@ Called when the visible month changes (initial render, swipe, header navigation,
 Thank you for using Mosaic!
 
 *iOS Team, The Guardian*
-
