@@ -299,7 +299,7 @@ public struct MosaicCalendarView<Header: CalendarHeaderViewable, Cell: CalendarD
     /// Registers a handler that fires whenever the displayed month changes
     /// (via swipe, the chevron buttons, or the initial appearance), passing
     /// that month's date interval.
-    func onMonthChange(_ handler: @escaping (DateInterval) -> Void) -> Self {
+    public func onMonthChange(_ handler: @escaping (DateInterval) -> Void) -> Self {
         var copy = self
         copy.monthChangeHandler = handler
         return copy
@@ -307,7 +307,7 @@ public struct MosaicCalendarView<Header: CalendarHeaderViewable, Cell: CalendarD
 
     /// Registers a handler that fires when a day is tapped, passing the
     /// selected date and its mark (if one exists on that day).
-    func onDateSelected(_ handler: @escaping (Date, (any CalendarDayRepresentable)?) -> Void) -> Self {
+    public func onDateSelected(_ handler: @escaping (Date, (any CalendarDayRepresentable)?) -> Void) -> Self {
         var copy = self
         copy.dateSelectHandler = handler
         return copy
