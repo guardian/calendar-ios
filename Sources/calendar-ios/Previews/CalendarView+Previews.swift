@@ -62,7 +62,7 @@ Date.now.monthAndYear.adding(months: -24)!...Date.now.monthAndYear.adding(months
     }
 }
 
-private struct PreviewWeekdayLabel: View {
+private struct PreviewWeekdayLabel: CalendarWeekdayViewable {
     let symbol: String
 
     var body: some View {
