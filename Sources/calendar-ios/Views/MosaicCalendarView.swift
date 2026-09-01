@@ -9,6 +9,9 @@ public struct MosaicCalendarView<Header: CalendarHeaderViewable, Cell: CalendarD
     /// The day the user has tapped, if any.
     @State private var selectedDate: Date? = Date()
 
+    /// Ensures initial pager recentering only runs once per view lifecycle.
+    @State private var didRunInitialPagerRecentering = false
+
     /// Observable month state consumed by custom headers.
     @State var headerContext: CalendarHeaderContext
 
@@ -265,33 +268,62 @@ public struct MosaicCalendarView<Header: CalendarHeaderViewable, Cell: CalendarD
     /// visible month (and its immediate neighbors) are ever instantiated.
     ///
     private var pager: some View {
-        ScrollView(.horizontal) {
-            LazyHStack(alignment: .top, spacing: 20) {
-                ForEach(months, id: \.self) { month in
-                    CalendarMonthGridView(
-                        month: month,
-                        selectedDate: $selectedDate,
-                        daysByDate: daysByDate,
-                        cellContent: cellContent,
-                        weekdayLabelContent: weekdayLabelContent
-                    )
-                    .aspectRatio(1, contentMode: .fit)
-                    .containerRelativeFrame(.horizontal, alignment: .top)
-                    .clipped()
-                    .scrollTransition { effect, phase in
-                        effect
-                            .opacity(phase.isIdentity ? 1 : 0.15)
-                            .blur(radius: phase.isIdentity ? 0 : 2)
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal) {
+                LazyHStack(alignment: .top, spacing: 20) {
+                    ForEach(months, id: \.self) { month in
+                        CalendarMonthGridView(
+                            month: month,
+                            selectedDate: $selectedDate,
+                            daysByDate: daysByDate,
+                            cellContent: cellContent,
+                            weekdayLabelContent: weekdayLabelContent
+                        )
+                        .aspectRatio(1, contentMode: .fit)
+                        .containerRelativeFrame(.horizontal, alignment: .top)
+                        .clipped()
+                        .scrollTransition { effect, phase in
+                            effect
+                                .opacity(phase.isIdentity ? 1 : 0.15)
+                                .blur(radius: phase.isIdentity ? 0 : 2)
+                        }
+                        .id(month)
                     }
-                    .id(month)
                 }
+                .scrollTargetLayout()
             }
-            .scrollTargetLayout()
+            .scrollTargetBehavior(.viewAligned)
+            .scrollPosition(id: $scrolledMonth, anchor: .center)
+            .scrollIndicators(.hidden)
+            .scrollClipDisabled()
+            .onAppear {
+                recenterPagerAfterInitialLayout(using: proxy)
+            }
         }
-        .scrollTargetBehavior(.viewAligned)
-        .scrollPosition(id: $scrolledMonth, anchor: .center)
-        .scrollIndicators(.hidden)
-        .scrollClipDisabled()
+    }
+
+    private func recenterPagerAfterInitialLayout(using proxy: ScrollViewProxy) {
+        guard !didRunInitialPagerRecentering, let targetMonth = scrolledMonth else { return }
+        didRunInitialPagerRecentering = true
+
+        Task { @MainActor in
+            // Give SwiftUI an extra pass to settle geometry after conditional mount.
+            await Task.yield()
+            await Task.yield()
+
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+
+            withTransaction(transaction) {
+                proxy.scrollTo(targetMonth, anchor: .center)
+            }
+
+            // One more pass catches late layout updates from parent transitions.
+            await Task.yield()
+            withTransaction(transaction) {
+                proxy.scrollTo(targetMonth, anchor: .center)
+            }
+        }
     }
 
     // MARK: - Modifiers
