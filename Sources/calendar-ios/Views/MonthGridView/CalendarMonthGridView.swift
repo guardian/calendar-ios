@@ -28,33 +28,30 @@ struct CalendarMonthGridView<Cell: View>: View {
     )
 
     var body: some View {
-        LazyVGrid(columns: columns, spacing: 0) {
-            ForEach(Array(days.enumerated()), id: \.offset) { _, date in
-                Group {
-                    if let date {
-                        Button {
-                            selectedDate = date
-                        } label: {
-                            cellContent(representable(for: date))
-                        }
-                        .buttonStyle(.plain)
-                    } else {
-                        // Empty leading slot for days before the 1st.
-                        Color.clear
-                    }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                .aspectRatio(1.0, contentMode: .fill)
-            }
-        }
-        .background {
-            if canvasDecorationsEnabled {
-                Canvas { context, size in
+        GeometryReader { proxy in
+            Canvas { context, size in
+                if canvasDecorationsEnabled {
                     drawDayCellBackgrounds(context: context, size: size, columns: 7)
                     drawGridLines(context: context, size: size, columns: 7, rows: dayRowCount)
                 }
-                .allowsHitTesting(false)
+                drawDayCellContent(context: context, size: size, columns: 7)
+            } symbols: {
+                ForEach(Array(days.enumerated()), id: \.offset) { index, date in
+                    if let date {
+                        cellContent(representable(for: date))
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                            .contentShape(Rectangle())
+                            .tag(index)
+                    }
+                }
             }
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onEnded { value in
+                        selectDate(at: value.location, in: proxy.size, columns: 7)
+                    }
+            )
         }
         .safeAreaInset(edge: .top, spacing: 0) {
             weekdayLabels
@@ -90,6 +87,33 @@ struct CalendarMonthGridView<Cell: View>: View {
 
     private var dayRowCount: Int {
         max(1, Int(ceil(Double(days.count) / 7.0)))
+    }
+
+    private func drawDayCellContent(context: GraphicsContext, size: CGSize, columns: Int) {
+        guard columns > 0, size.width > 0, size.height > 0 else { return }
+
+        let rows = dayRowCount
+        guard rows > 0 else { return }
+
+        let cellWidth = size.width / CGFloat(columns)
+        let cellHeight = size.height / CGFloat(rows)
+
+        for (index, maybeDate) in days.enumerated() {
+            guard maybeDate != nil,
+                  let symbol = context.resolveSymbol(id: index)
+            else { continue }
+
+            let row = index / columns
+            let column = index % columns
+            let rect = CGRect(
+                x: CGFloat(column) * cellWidth,
+                y: CGFloat(row) * cellHeight,
+                width: cellWidth,
+                height: cellHeight
+            )
+
+            context.draw(symbol, in: rect)
+        }
     }
 
     // Paint cell state (selected/today) in a single canvas pass behind interactive content.
@@ -152,5 +176,24 @@ struct CalendarMonthGridView<Cell: View>: View {
             path.addLine(to: CGPoint(x: size.width, y: y))
             context.stroke(path, with: .color(strokeColor), lineWidth: 0.5)
         }
+    }
+
+    private func selectDate(at point: CGPoint, in size: CGSize, columns: Int) {
+        guard columns > 0, size.width > 0, size.height > 0 else { return }
+
+        let rows = dayRowCount
+        guard rows > 0 else { return }
+
+        let cellWidth = size.width / CGFloat(columns)
+        let cellHeight = size.height / CGFloat(rows)
+
+        let clampedX = min(max(point.x, 0), max(0, size.width - 0.001))
+        let clampedY = min(max(point.y, 0), max(0, size.height - 0.001))
+        let column = Int(clampedX / cellWidth)
+        let row = Int(clampedY / cellHeight)
+        let index = row * columns + column
+
+        guard index >= 0, index < days.count, let date = days[index] else { return }
+        selectedDate = date
     }
 }
