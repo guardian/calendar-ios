@@ -30,6 +30,14 @@ extension MosaicCalendarView {
                                 .frame(height: cellHeight)
                         }
                     }
+                    .background {
+                        if canvasDecorationsEnabled {
+                            Canvas { context, size in
+                                drawGridLines(context: context, size: size, columns: 3, rows: 4)
+                            }
+                            .allowsHitTesting(false)
+                        }
+                    }
                     .frame(width: proxy.size.width - spacing, height: proxy.size.height, alignment: .top)
                 }
                 .tag(year)
@@ -79,5 +87,29 @@ extension MosaicCalendarView {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(context.isSelected ? Color.accentColor : Color.secondary.opacity(0.12))
             }
+    }
+
+    private func drawGridLines(context: GraphicsContext, size: CGSize, columns: Int, rows: Int) {
+        guard columns > 0, rows > 0, size.width > 0, size.height > 0 else { return }
+
+        let strokeColor = Color.secondary.opacity(0.12)
+        let cellWidth = size.width / CGFloat(columns)
+        let cellHeight = size.height / CGFloat(rows)
+
+        for column in 1..<columns {
+            let x = CGFloat(column) * cellWidth
+            var path = Path()
+            path.move(to: CGPoint(x: x, y: 0))
+            path.addLine(to: CGPoint(x: x, y: size.height))
+            context.stroke(path, with: .color(strokeColor), lineWidth: 0.5)
+        }
+
+        for row in 1..<rows {
+            let y = CGFloat(row) * cellHeight
+            var path = Path()
+            path.move(to: CGPoint(x: 0, y: y))
+            path.addLine(to: CGPoint(x: size.width, y: y))
+            context.stroke(path, with: .color(strokeColor), lineWidth: 0.5)
+        }
     }
 }

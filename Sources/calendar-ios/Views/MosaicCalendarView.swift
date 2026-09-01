@@ -36,9 +36,13 @@ public struct MosaicCalendarView<Header: CalendarHeaderViewable, Cell: CalendarD
     /// A stable, contiguous window of start-of-month dates the pager scrolls through.
     let months: [Date]
 
+    /// Enables non-interactive Canvas-drawn visual decoration layers.
+    let canvasDecorationsEnabled: Bool
+
     public init(
         days: [any CalendarDayRepresentable] = [],
         range: ClosedRange<Date>? = nil,
+        canvasDecorationsEnabled: Bool = true,
         @ViewBuilder cell: @escaping (any CalendarDayRepresentable) -> Cell,
         @ViewBuilder header: @escaping (CalendarHeaderContext) -> Header
     ) {
@@ -52,6 +56,7 @@ public struct MosaicCalendarView<Header: CalendarHeaderViewable, Cell: CalendarD
         headerContent = header
         weekdayLabelContent = nil
         monthPickerCellContent = nil
+        self.canvasDecorationsEnabled = canvasDecorationsEnabled
 
         let anchor = calendar.date(from: calendar.dateComponents([.year, .month], from: .now)) ?? .now
         months = Self.makeVisibleMonths(calendar: calendar, range: range, anchor: anchor)
@@ -75,6 +80,7 @@ public struct MosaicCalendarView<Header: CalendarHeaderViewable, Cell: CalendarD
     public init<WeekdayLabel: CalendarWeekdayViewable>(
         days: [any CalendarDayRepresentable] = [],
         range: ClosedRange<Date>? = nil,
+        canvasDecorationsEnabled: Bool = true,
         @ViewBuilder cell: @escaping (any CalendarDayRepresentable) -> Cell,
         @ViewBuilder header: @escaping (CalendarHeaderContext) -> Header,
         @ViewBuilder weekday: @escaping (String) -> WeekdayLabel
@@ -89,6 +95,7 @@ public struct MosaicCalendarView<Header: CalendarHeaderViewable, Cell: CalendarD
         headerContent = header
         weekdayLabelContent = { symbol in AnyView(weekday(symbol)) }
         monthPickerCellContent = nil
+        self.canvasDecorationsEnabled = canvasDecorationsEnabled
 
         let anchor = calendar.date(from: calendar.dateComponents([.year, .month], from: .now)) ?? .now
         months = Self.makeVisibleMonths(calendar: calendar, range: range, anchor: anchor)
@@ -112,6 +119,7 @@ public struct MosaicCalendarView<Header: CalendarHeaderViewable, Cell: CalendarD
     public init<MonthPickerCell: CalendarMonthViewable>(
         days: [any CalendarDayRepresentable] = [],
         range: ClosedRange<Date>? = nil,
+        canvasDecorationsEnabled: Bool = true,
         @ViewBuilder cell: @escaping (any CalendarDayRepresentable) -> Cell,
         @ViewBuilder header: @escaping (CalendarHeaderContext) -> Header,
         @ViewBuilder monthPickerCell: @escaping (CalendarMonthPickerCellContext) -> MonthPickerCell
@@ -126,7 +134,8 @@ public struct MosaicCalendarView<Header: CalendarHeaderViewable, Cell: CalendarD
         headerContent = header
         weekdayLabelContent = nil
         monthPickerCellContent = { context in AnyView(monthPickerCell(context)) }
- 
+        self.canvasDecorationsEnabled = canvasDecorationsEnabled
+
         let anchor = calendar.date(from: calendar.dateComponents([.year, .month], from: .now)) ?? .now
         months = Self.makeVisibleMonths(calendar: calendar, range: range, anchor: anchor)
 
@@ -149,6 +158,7 @@ public struct MosaicCalendarView<Header: CalendarHeaderViewable, Cell: CalendarD
     public init<WeekdayLabel: CalendarWeekdayViewable, MonthPickerCell: CalendarMonthViewable>(
         days: [any CalendarDayRepresentable] = [],
         range: ClosedRange<Date>? = nil,
+        canvasDecorationsEnabled: Bool = true,
         @ViewBuilder cell: @escaping (any CalendarDayRepresentable) -> Cell,
         @ViewBuilder header: @escaping (CalendarHeaderContext) -> Header,
         @ViewBuilder weekday: @escaping (String) -> WeekdayLabel,
@@ -164,6 +174,7 @@ public struct MosaicCalendarView<Header: CalendarHeaderViewable, Cell: CalendarD
         headerContent = header
         weekdayLabelContent = { symbol in AnyView(weekday(symbol)) }
         monthPickerCellContent = { context in AnyView(month(context)) }
+        self.canvasDecorationsEnabled = canvasDecorationsEnabled
 
         let anchor = calendar.date(from: calendar.dateComponents([.year, .month], from: .now)) ?? .now
         months = Self.makeVisibleMonths(calendar: calendar, range: range, anchor: anchor)
@@ -273,7 +284,8 @@ public struct MosaicCalendarView<Header: CalendarHeaderViewable, Cell: CalendarD
                         selectedDate: $selectedDate,
                         daysByDate: daysByDate,
                         cellContent: cellContent,
-                        weekdayLabelContent: weekdayLabelContent
+                        weekdayLabelContent: weekdayLabelContent,
+                        canvasDecorationsEnabled: canvasDecorationsEnabled
                     )
                     .aspectRatio(1, contentMode: .fit)
                     .containerRelativeFrame(.horizontal, alignment: .top)

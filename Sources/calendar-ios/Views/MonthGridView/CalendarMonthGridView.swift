@@ -19,6 +19,9 @@ struct CalendarMonthGridView<Cell: View>: View {
     // Optional view provided for each of the weekday labels above the grid.
     let weekdayLabelContent: ((String) -> AnyView)?
 
+    /// Enables non-interactive Canvas-drawn grid decoration behind cells.
+    let canvasDecorationsEnabled: Bool
+
     let columns = Array(
         repeating: GridItem(.flexible(), spacing: 0),
         count: 7
@@ -42,6 +45,15 @@ struct CalendarMonthGridView<Cell: View>: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 .aspectRatio(1.0, contentMode: .fill)
+            }
+        }
+        .background {
+            if canvasDecorationsEnabled {
+                Canvas { context, size in
+                    drawDayCellBackgrounds(context: context, size: size, columns: 7)
+                    drawGridLines(context: context, size: size, columns: 7, rows: dayRowCount)
+                }
+                .allowsHitTesting(false)
             }
         }
         .safeAreaInset(edge: .top, spacing: 0) {
@@ -74,5 +86,71 @@ struct CalendarMonthGridView<Cell: View>: View {
             cells.append(calendar.date(byAdding: .day, value: day - 1, to: firstOfMonth))
         }
         return cells
+    }
+
+    private var dayRowCount: Int {
+        max(1, Int(ceil(Double(days.count) / 7.0)))
+    }
+
+    // Paint cell state (selected/today) in a single canvas pass behind interactive content.
+    private func drawDayCellBackgrounds(context: GraphicsContext, size: CGSize, columns: Int) {
+        guard columns > 0, size.width > 0, size.height > 0 else { return }
+
+        let rows = dayRowCount
+        guard rows > 0 else { return }
+
+        let cellWidth = size.width / CGFloat(columns)
+        let cellHeight = size.height / CGFloat(rows)
+
+        for (index, maybeDate) in days.enumerated() {
+            guard let date = maybeDate else { continue }
+
+            let day = representable(for: date)
+            let row = index / columns
+            let column = index % columns
+
+            let x = CGFloat(column) * cellWidth
+            let y = CGFloat(row) * cellHeight
+            let baseRect = CGRect(x: x, y: y, width: cellWidth, height: cellHeight)
+            let insetRect = baseRect.insetBy(dx: 3, dy: 3)
+
+            if day.isSelected {
+                context.fill(Path(roundedRect: insetRect, cornerRadius: 8), with: .color(Color.accentColor.opacity(0.2)))
+            } else if day.isToday {
+                context.fill(Path(roundedRect: insetRect, cornerRadius: 8), with: .color(Color.secondary.opacity(0.12)))
+            }
+
+            if day.isToday {
+                context.stroke(
+                    Path(roundedRect: insetRect, cornerRadius: 8),
+                    with: .color(Color.accentColor.opacity(0.55)),
+                    lineWidth: 1
+                )
+            }
+        }
+    }
+
+    private func drawGridLines(context: GraphicsContext, size: CGSize, columns: Int, rows: Int) {
+        guard columns > 0, rows > 0, size.width > 0, size.height > 0 else { return }
+
+        let strokeColor = Color.secondary.opacity(0.12)
+        let cellWidth = size.width / CGFloat(columns)
+        let cellHeight = size.height / CGFloat(rows)
+
+        for column in 1..<columns {
+            let x = CGFloat(column) * cellWidth
+            var path = Path()
+            path.move(to: CGPoint(x: x, y: 0))
+            path.addLine(to: CGPoint(x: x, y: size.height))
+            context.stroke(path, with: .color(strokeColor), lineWidth: 0.5)
+        }
+
+        for row in 1..<rows {
+            let y = CGFloat(row) * cellHeight
+            var path = Path()
+            path.move(to: CGPoint(x: 0, y: y))
+            path.addLine(to: CGPoint(x: size.width, y: y))
+            context.stroke(path, with: .color(strokeColor), lineWidth: 0.5)
+        }
     }
 }
